@@ -1,0 +1,830 @@
+    mean(x, trim = 0, na.rm = FALSE, ...)
+
+# 타이타닉 데이터를 활용한 승선자의 생사 여부 에측
+
+## Feature Column 은 최소 3가지 이상
+
+짝수는 안되고 1개는 적음
+
+## EDA(Exploray Data Analysis) : 탐색적 데이터 분석
+
+```{r}
+#str
+library(stringr)
+# arrange
+library(dplyr)
+# 3D chart
+library(plotrix)
+```
+
+```{r}
+tit <- read.csv('./Data/Titanic_train.csv')
+head(tit)
+tail(tit)
+```
+
+```{r}
+gender <- c("male","female")
+```
+
+```{r}
+str(tit)
+```
+
+# 컬럼 내용 확인
+
+    1912년 일 
+
+
+    - Survived  : 생존여부, 0=No, 1=Yes
+    - Pclass    : 티켓등급, 1=1st, 2=2nd, 3=3rd
+    - SibSp     : 함께 탑승한 형제,자매,배우자 수 
+    - parch     : 함께 탑승한 부모,자식 수 (패런츠,칠드런)
+    - fare      : 요금 
+    - cabin     : 객실번호 , 3등급은 객실번호가 없음
+    - Embarked  : 탑승항구, C = Chersbourg(오스트리아)
+                            Q = QueensTown(영국)
+                            S = Southampton(영국)
+
+## check NA
+
+```{r}
+# column 별로 확인 
+colSums(is.na(tit))
+```
+
+Age Column 의 분석 가부 확인
+
+```{r}
+# % 확인
+177/891
+
+# 20% 정도가 NA. 20%정도면 뭐.. 쓸만하겠네 
+```
+
+일단 Age를 빼고 해보자. tit의 Age가 NA인것 빼고 데이터셋 만들기
+
+```{r}
+# subset(tit, tit$Age == 'NA') 시도방법
+
+# 강사님 답안 
+subset(tit, is.na(tit$Age))
+subset(tit, !is.na(tit$Age)) # << 개발자 마인드 이렇게 사용하지는 않을 예정
+```
+
+Age를 넣고 할지, 빼고 할지 아직 결정한것은 아니다 .
+
+우리가 할 것은 생사 여부 확인.
+
+Iris를 생각하자. Species를 구할때, 우리는 Survived를 찾는거임.
+
+Survived 기준으로 정렬
+
+```{r}
+tit <- arrange(tit, Survived)
+head(tit)
+```
+
++-------------------------------------+
+| 3등급은 다 죽었는데 1등급도 죽었네? |
+|                                     |
+| 다 남자네? 이당시의 문화 Lady First |
++:====================================+
+|                                     |
++-------------------------------------+
+
+생존자 함 볼까?
+
+```{r}
+tail(tit)
+```
+
++---------------------------------------+
+| 26살 남자 1등급 한명은 살았네? 귀족 ? |
+|                                       |
+| EDA 타겟 여부 확인의 비율은 어떤가?   |
++:======================================+
+|                                       |
++---------------------------------------+
+
+Survived 기준으로 생존과 사망 Count 확인\
+
+```{r}
+# subset(tit, Survived = "0")
+# subset(tit, !is.na(tit$Age))
+
+# 강사님 답안 
+paste(
+  nrow(subset(tit, Survived == 0)), # = 549
+  nrow(subset(tit, Survived == 1)),
+  nrow(subset(tit, Survived == 0)) /nrow(tit), 
+  nrow(subset(tit, Survived == 1)) /nrow(tit)
+)
+
+round( (nrow(subset(tit, Survived == 0)) /nrow(tit))*100 ,2)
+```
+
+\
+
++----------------------------------------------------------+
+| 사망자 61% 생존자 38% ?? 음 애매하네 라고 생각이 들꺼임  |
+|                                                          |
+| 이걸 그래프로 표시할꺼다                                 |
++:=========================================================+
+|                                                          |
++----------------------------------------------------------+
+
+```{r}
+ nrow(subset(tit, Survived == 0)) # = 549
+nrow(subset(tit, Survived == 1)) # = 342
+round( (nrow(subset(tit, Survived == 0)) /nrow(tit))*100 ,2)
+round( (nrow(subset(tit, Survived == 1)) /nrow(tit))*100 ,2)
+```
+
+```{r}
+Sur <- c('사망','생존')
+ratio <- c(round( (nrow(subset(tit, Survived == 0)) /nrow(tit))*100 ,2),
+           round( (nrow(subset(tit, Survived == 1)) /nrow(tit))*100 ,2)
+           )
+label <- paste(Sur,"\n",ratio,"%")
+
+par(family="AppleGothic")
+pie3D(
+  c(nrow(subset(tit, Survived == 0)),nrow(subset(tit, Survived == 1))),
+  main = '타이타닉호 생존율',
+  col=c("red","skyblue"),
+  labelcex = 0.7,
+  explode = 0.05,
+  labels = label,
+  
+)
+```
+
+막대그래프로도 그려보자
+
+```{r}
+par(family="AppleGothic")
+barplot(
+  as.matrix(data.frame(사망 = 549, 생존 = 342)),
+  main = '타이타닉호 생존율',
+  names=c('사망','생존'),
+  col= c("red","skyblue"),
+  ylim = c(0,600),
+  xlab = "생존여부",
+  ylab = "인원수",
+  space = 0.3
+)
+
+text(0.8,580 , 580 ,cex = 0.8)
+text(2.1,370 , 342  ,cex = 0.8)
+
+```
+
+> (조금 찜찜하지만 ) Survived 컬럼을 Target Column으로 정한다
+
+EDA 하는 과정에서 어떠한거 부터 시작하고 애매한지 안사용할지 정한다.
+
+그 중에서 일단은 성별컬럼으로 시작
+
+## Feature Column 구성을 위해 Sex Column 분석
+
+```{r}
+# 일단 남녀 말고 다른게 있나 확인
+unique(tit$Sex) # = "male"   "female"
+sum(is.na(tit$Sex)) # = 0
+```
+
+문자니까 일단 숫자로 바꾸자
+
+```{r}
+tit$Sex <- as.factor(tit$Sex)
+str(tit)
+```
+
+여성의 탑승인원과 남성의 탑승인원 확인해보기
+
+```{r}
+FemaleCount <- nrow(subset(tit, Sex == 'female')) # = 342
+MaleCount <- nrow(subset(tit, Sex == 'male')) # = 342
+FemaleCount; MaleCount
+
+```
+
+5:5가 더 안좋음, 차이가 있어야 특징이 있는것, 3.5:6.5 비율로 특징이 있으니 사용할 수 있을것 같다
+
+```{r}
+round( FemaleCount/(FemaleCount+MaleCount)*100 ,2)
+round( MaleCount/(FemaleCount+MaleCount)*100 ,2)
+```
+
+Sruvived \<- [Sex] ??
+
+검증이 필요함
+
+여성의 생존 과 사망 인원수
+
+```{r}
+FemaleDeath <- nrow(subset(tit, Sex =='female' & Survived == 0)) # = 81
+FemaleSurvive <- nrow(subset(tit, Sex =='female' & Survived == 1)) # = 233
+
+round((nrow(subset(tit, Sex =='female' & Survived == 0))/314) * 100,2) #  25.8
+round((nrow(subset(tit, Sex =='female' & Survived == 1))/314) * 100,2) #  74.2
+ 
+# 사망비율 25.8   생존비율 74.2
+```
+
+남성의 생존 과 사망 인원수
+
+```{r}
+MaleDeath <- nrow(subset(tit, Sex =='male' & Survived == 0)) # = 468
+MaleSurvive <- nrow(subset(tit, Sex =='male' & Survived == 1)) # = 109
+
+round((nrow(subset(tit, Sex =='male' & Survived == 0))/577) * 100,2) # 81.11
+round((nrow(subset(tit, Sex =='male' & Survived == 1))/577) * 100,2) # 18.89
+
+# 사망비율 81.11   생존비율 18.89
+```
+
+차이가 잘 나기 때문에 좋은 Feature 다
+
+```{r}
+data.frame(FemaleSurvive/FemaleCount , FemaleDeath/FemaleCount)
+```
+
+```{r}
+Sur <- c('사망','생존')
+ratio <- c(
+        round((nrow(subset(tit, Sex =='female' & Survived == 0))/314) * 100,2), #  25.8
+        round((nrow(subset(tit, Sex =='female' & Survived == 1))/314) * 100,2) #  74.2
+           )
+label <- paste(Sur,"\n",ratio,"%")
+
+par(family="AppleGothic")
+pie3D(
+  c(FemaleDeath,FemaleSurvive),
+  main = '타이타닉호 여성 생존율',
+  col=c("red","skyblue"),
+  labelcex = 0.7,
+  explode = 0.05,
+  labels = label,
+  
+)
+```
+
+```{r}
+makePie <- function(s,d,g){ # s=survive / d = death / g = gender
+  par(family="AppleGothic")
+  Sur <- c('사망','생존')
+  Sex <- g
+  ratio1 <- round((nrow(subset(tit, Sex ==g & Survived == 0))/s+d) * 100,2)
+  ratio2 <- round((nrow(subset(tit, Sex ==g & Survived == 1))/s+d) * 100,2)
+  ratio <- c(ratio1 , ratio2)
+label <- paste(Sur,"\n",ratio,"%")
+pie3D(
+  c(MaleDeath,MaleSurvive),
+  main = c('타이타닉호',c,'생존율'),
+  col=c("red","skyblue"),
+  labelcex = 0.7,
+  explode = 0.05,
+  labels = label,
+)
+  
+}
+
+
+###########################################################################
+# Chart Function 만들다 만거
+###########################################################################
+```
+
+```{r}
+Sur <- c('사망','생존')
+ratio <- c(round((nrow(subset(tit, Sex =='male' & Survived == 0))/577) * 100,2), # 81.11
+          round((nrow(subset(tit, Sex =='male' & Survived == 1))/577) * 100,2) # 18.89
+           )
+label <- paste(Sur,"\n",ratio,"%")
+
+par(family="AppleGothic")
+pie3D(
+  c(MaleDeath,MaleSurvive),
+  main = '타이타닉호 남성 생존율',
+  col=c("red","skyblue"),
+  labelcex = 0.7,
+  explode = 0.05,
+  labels = label,
+  
+)
+```
+
+```{r}
+makePie(MaleSurvive,MaleDeath,'Female')
+```
+
+### 막대그래프로도 만들어 보자(나중에)
+
+```{r}
+# 막대그래프 
+```
+
+Sruvived \<- [Sex] !!
+
+다음껄 또 찾아보자
+
+```{r}
+str(tit)
+head(tit)
+tit
+```
+
+## 티켓 등급을 분석해보자
+
+```{r}
+table(tit$Pclass)
+```
+
+3등급에 많이 탔네
+
+```{r}
+# 0 은 사망, 1은 생존
+nrow(subset(tit, Pclass == 3 & Survived == 0)) # = 372
+nrow(subset(tit, Pclass == 2 & Survived == 0)) # = 97
+nrow(subset(tit, Pclass == 1 & Survived == 0)) # = 80
+```
+
+```{r}
+classSexLive <- function(p,s){ # p는 클래스 1,2,3 / s 는 성별 female , male
+
+  nrow(subset(tit, Pclass == p & Sex ==s)) 
+  nrow(subset(tit, Pclass == p & Survived == 1 & Sex ==s))
+  nrow(subset(tit, Pclass == p & Survived == 0 & Sex ==s)) 
+  cat(p,"등급 객실의 ",ifelse(s=="female","여성","남성")," 생존율은 ", 
+      nrow(subset(tit, Pclass == p & Survived == 1 & Sex == s )),"/",
+      nrow(subset(tit, Pclass == p & Sex ==s)),",",
+      round((nrow(subset(tit, Pclass == p & Survived == 1 & Sex == s )) / 
+            nrow(subset(tit, Pclass == p & Sex ==s)) ) * 100 ,2) ,"%" ,"\n"
+      )
+  }
+```
+
+```{r}
+classSexLive(1,"male")
+classSexLive(2,"male")
+classSexLive(3,"female")
+classSexLive(2,"male")
+c("male","female")
+```
+
+```{r}
+for (i in 1:3){
+  classSexLive(i,"female")
+}
+
+for (i in 1:3){
+  classSexLive(i,"male")
+}
+
+
+```
+
+```{r}
+
+# 3등급 객실 
+nrow(subset(tit, Pclass == 3 & Sex =='female')) # 3등급 객실 여성 승객 144 
+nrow(subset(tit, Pclass == 3 & Survived == 1 & Sex =='female')) # 3등객실 여성 생존 72
+nrow(subset(tit, Pclass == 3 & Survived == 0 & Sex =='female')) # 3등객실 여성 사망 72
+
+# 2등급 객실 
+nrow(subset(tit, Pclass == 2 & Sex =='female')) # 2등객실 여성 승객 76
+nrow(subset(tit, Pclass == 2 & Survived == 1 & Sex =='female')) # 2등객실 여성 생존 70
+nrow(subset(tit, Pclass == 2 & Survived == 0 & Sex =='female')) # 2등객실 여성 사망 70
+
+# 1등급 객실 
+
+nrow(subset(tit, Pclass == 1 & Sex =='female')) # 1등객실 여성 승객 94
+nrow(subset(tit, Pclass == 1 & Survived == 1 & Sex =='female')) # 1등객실 여성 생존 91
+nrow(subset(tit, Pclass == 1 & Survived == 0 & Sex =='female')) # 1등객실 여성 사망 3
+round((nrow(subset(tit, Pclass == 1 & Survived == 1 & Sex =='female')) / nrow(subset(tit, Pclass == 1 & Sex =='female')) ) * 100 ,2) # 1등급 객실 여성 생존율 96.81%
+round(nrow(subset(tit, Pclass == 1 & Survived == 0 & Sex =='female')) / nrow(subset(tit, Pclass == 1 & Sex =='female')) * 100 ,2) # 1등급 객실 여성 사망율 3.19
+```
+
+> Survived \<- [ Sex, Pclass ]
+
+주관신보다는 객관식이 먼저 하기 편함. embarked가 3가지 종류만 있으니 이걸로 먼저 해보자
+
+## Embarked 와의 연관선 확인
+
+```{r}
+unique(tit$Embarked)
+```
+
+?? "" 가 있네? 이상치네
+
+```{r}
+tit$Embarked <- factor(tit$Embarked)
+
+str(tit)
+
+# cha로 봐도 factor로 봐도 4개 "" 가 있음 
+```
+
+빈칸의 데이터 찾기
+
+```{r}
+subset(tit, Embarked == "")
+
+```
+
+![![](images/Screenshot%202022-12-09%20at%203.27.34%20PM.png)](images/Screenshot%202022-12-09%20at%203.27.22%20PM.png)
+
++-----------------------------------------------+
+| Ticket, Fare,Cabin 가 같네?                   |
+|                                               |
+| 둘다 여성이네?                                |
+|                                               |
+| Age는 38, 62 , 이름은 다르네 엄마딸이 아닌가? |
+|                                               |
+| 모르겠다 많이 탄 항구에 탔겠지 ?              |
++:==============================================+
+|                                               |
++-----------------------------------------------+
+
+```{r}
+sum(tit$Embarked == "S") # = 644
+sum(tit$Embarked == "C") # = 168
+sum(tit$Embarked == "Q") # = 77
+```
+
+""을"S" 항구로 바꿔넣자
+
+```{r}
+# Python 방식
+tit$Embarked[tit$Embarked == "" ] <- "S"
+tit$Embarked[tit$Embarked == "" ] # = 0
+sum(tit$Embarked == "S") # = 644 ->> 646 
+```
+
+str 함 체
+
+```{r}
+str(tit)
+```
+
+![](images/Screenshot%202022-12-09%20at%203.35.31%20PM.png)
+
+여전히 "" 을 가지고 있다
+
+```{r}
+table(tit$Embarked)
+```
+
+![](images/Screenshot%202022-12-09%20at%203.36.10%20PM.png)
+
+```{r}
+# fcator로 재구성
+tit$Embarked <- factor(tit$Embarked)
+```
+
+```{r}
+str(tit)
+```
+
+```{r}
+table(tit$Embarked)
+```
+
+Embarked에 차이가 난다. Feature 후보가 된다
+
+```{r}
+table(Sex=tit$Sex, Embarked = tit$Embarked)
+```
+
+```{r}
+par(family="AppleGothic")
+barplot(table(Sex=tit$Sex, Embarked = tit$Embarked),
+        main = '항구별 성별 승선 인원',
+     col = c("red","blue"),
+  beside = T,
+  ylim = c(0,500),
+  ylab = "인원수",
+  xlab = "항구별/성별",
+)
+legend(
+  1,500,c("여자","남자"),
+  fill=c("red","blue")
+)
+
+```
+
+항구별 생존인원
+
+```{r}
+par(family="AppleGothic")
+barplot(table(Survived=tit$Survived, Embarked = tit$Embarked),
+        main = '항구별 생존 인원',
+     col = c("red","blue"),
+  beside = T,
+  ylim = c(0,500),
+  ylab = "인원수",
+  xlab = "항구별/성별",
+)
+legend(
+  1,500,c("사망","생존"),
+  fill=c("red","blue")
+)
+```
+
+항구별 객실 등급별 인원
+
+```{r}
+par(family="AppleGothic")
+barplot(table(Pclass=tit$Pclass, Embarked = tit$Embarked),
+        main = '항구별 객실등급별 인원',
+     col = c("red","blue","yellow"),
+  beside = T,
+  ylim = c(0,500),
+  ylab = "인원수",
+  xlab = "항구별/객실 등급",
+)
+legend(
+  1,500,c("1","2","3"),
+  fill=c("red","blue","yellow")
+)
+```
+
+절반 이상의 승객이 Southampton에서 배를 탔으며 여기에서 탑승한 승객의 70%가 남성 이었으며
+
+남성의 사망율이 여성보다 훨씬 높았으므로 Southampton의 사망율이 높게 나왔으며
+
+Southampton에서 탑승한 승객의 60%이상이 3등급 객실을 사용했다.
+
+C항구에서 탑승한 승객들은 1등 객실 비중 및 생존율이 높은 것으로 보아 C항구가 있는 동네는 부자 동네이다.
+
+> Survived \<- [ Sex, Pclass , Embarked]
+
+진짜 1,2,3등급하고 생존율하고 관계가 있나 ?
+
+```{r}
+cor(tit$Survived, tit$Pclass)
+```
+
+0.33 이면 낮는거 아닌가? 하는데 등급별이 3개 이기 때문에 높은 수치라고 생각할 수 있다.
+
+## 나이별로 해보기(나중에 마저 )
+
+```{r}
+sum(is.na(tit$Age)) # = 177 
+nrow(tit) # = 891
+(188/891) * 100
+
+# NA 비율 21.099
+```
+
+```{r}
+
+classSexLive <- function(p,s){ # p는 클래스 1,2,3 / s 는 성별 female , male
+
+  nrow(subset(tit, Pclass == p & Sex ==s)) 
+  nrow(subset(tit, Pclass == p & Survived == 1 & Sex ==s))
+  nrow(subset(tit, Pclass == p & Survived == 0 & Sex ==s)) 
+  cat(p,"등급 객실의 ",s," 생존율은 ", 
+      nrow(subset(tit, Pclass == p & Survived == 1 & Sex == s )),"/",
+      nrow(subset(tit, Pclass == p & Sex ==s)),",",
+      round((nrow(subset(tit, Pclass == p & Survived == 1 & Sex == s )) / 
+            nrow(subset(tit, Pclass == p & Sex ==s)) ) * 100 ,2) ,"%" ,"\n"
+      )
+  }
+```
+
+```{r}
+# 등급별 객실 인원 수 
+nrow(subset(tit, Pclass == 1)) # = 216
+nrow(subset(tit, Pclass == 2)) # = 184
+nrow(subset(tit, Pclass == 3)) # = 491
+```
+
+```{r}
+# 등급별 객실의 연령 중앙값 구하기
+
+median(tit$Age , na.rm = T)
+# pclass 가 x 인 사람들
+
+median(subset(tit, Pclass == 1), )
+
+tit$Age
+```
+
+# RandomForest 예측모델 생성
+
+```{r}
+# 혹시 모르니 빽업본으로 시작
+tit_df <- tit
+```
+
+```{r}
+# 3가지로 만들거임
+target_col <- c("Survived","Sex","Pclass","Embarked")
+head(tit_df[,target_col])  # <<<<< 이녀석으로 머신러닝을 할거임 
+```
+
+성별을 숫자로 전환
+
+```{r}
+# 남자는 0, 여자는 1
+tit_df$SexCode[tit_df$Sex == "male"] <- 0
+tit_df$SexCode[tit_df$Sex == "female"] <- 1
+head(tit_df)
+```
+
+Delete Sex Column
+
+```{r}
+tit_df <- subset(tit_df, select = -Sex)
+head(tit_df)
+```
+
+```{r}
+target_col <- c("Survived","SexCode","Pclass","Embarked")
+head(tit_df[,target_col])  # <<<<< 이녀석으로 머신러닝을 할거임 
+```
+
+Embarked를 One-Hot Encoding 으로 변환
+
+```{r}
+# 우선 ture false를 각 이름으로 하나씩ㅁ ㅏㄴ들기 
+tit_df$Embarked_C = tit_df$Embarked == "C"
+tit_df$Embarked_S = tit_df$Embarked == "S"
+tit_df$Embarked_Q = tit_df$Embarked == "Q"
+head(tit_df[c("Embarked","Embarked_C","Embarked_S","Embarked_Q")])
+```
+
+```{r}
+target_col = c("Survived","SexCode","Pclass","Embarked_C","Embarked_S","Embarked_Q")
+head(tit_df[target_col])
+```
+
+### 머신러닝 돌릴 준비 끝
+
+# RandomForest
+
+sampling
+
+```{r}
+library(caret) #
+set.seed(1234)
+samp <- createDataPartition(tit_df$Survived, p=0.7, list=F)
+```
+
+```{r}
+data.train <- tit_df[samp,]
+data.test <- tit_df[-samp,]
+# 생각해보니 tit_df에는 필요없는것도 다 가지고 있네 ?
+```
+
+```{r}
+train_data <- data.train[target_col]
+```
+
+```{r}
+test_data <- data.test[target_col]
+```
+
+```{r}
+library(randomForest)
+```
+
+### 학습시키기
+
+```{r}
+rf <- randomForest(Survived ~ ., data = train_data, ntree = 100)
+```
+
+```{r}
+#시험문제 만들기 
+x <- subset(test_data, select = -Survived)
+#정답
+y <-test_data$Survived
+pred <- predict(rf,x)
+head(pred)
+```
+
+??? 내가 생각 했던거랑 다르게 나오네 ?
+
+target column인 survived가 factor가 아니면 주관식으로 아는데 지금 tit_df 에 Survived는 int로 되어 있어서 주관식으로 문제를 풀었음
+
+이건 생존 확률로 나오고 있는것,
+
+```{r}
+pred[pred <= 0.5] <- 0
+pred[pred > 0.5] <- 1
+head(pred)
+# 전부 다 사망이다 
+```
+
+예측력 함 보자
+
+```{r}
+mean(pred == y)
+```
+
+78%? 중요한거는 예측율이 아님. 정오표를 보고 공평하게 맞추고 있는지 확인해야 함
+
+```{r}
+table(pred, y)
+```
+
+-\> 죽은 사람은 잘 맞췄는데 살은 사람은 못맞춘다
+
+# RandomForest 에서는 주관식,객관식 신경써야댐
+
+# Survived를 factor로 변환 후 Random Forest
+
+```{r}
+train_data$Survived <- as.factor(train_data$Survived)
+test_data$Survived <- as.factor(test_data$Survived)
+```
+
+잘 바뀌었나 확인
+
+```{r}
+str(train_data)
+```
+
+```{r}
+rf <- randomForest(Survived ~ ., data = train_data, ntree = 100)
+x <- subset(test_data, select = -Survived)
+pred <- predict(rf, x)
+head(pred)
+```
+
+```{r}
+mean(pred == y)
+mean(pred == test_data$Survived)
+
+table(pred,test_data$Survived)
+```
+
+```{r}
+library(nnet)
+library(e1071)
+```
+
+# 인공신경망
+
+```{r}
+nnetFun <- function(n){
+  for (i in 1:n){
+    if(i == 1){
+      resultVec = c()
+    }#if end
+    samp <- createDataPartition(tit_df$Survived, p=0.7, list=F)
+    data.train <- tit_df[samp,]
+    data.test <- tit_df[-samp,]
+    x <- subset ( data.test, select = -Survived)
+    y <- data.test$Survived
+    model.nnet <- nnet(Survived ~ ., data = data.train, size = 3)
+    pred.nnet <- predict(model.nnet , x, type = 'class')
+    resultVec = append(resultVec, mean(pred.nnet == y))
+  }#for end
+  cat("---------------------------------------------\n")
+  cat("예측율 \n")
+  cat(resultVec,"\n")
+  cat("---------------------------------------------\n")
+  cat("평균예측율 : ",mean(resultVec),"\n")
+  cat("---------------------------------------------\n")
+}
+```
+
+```{r}
+nnetFun(1)
+```
+
+# SVM
+
+```{r}
+ samp <- createDataPartition(tit_df$Survived, p=0.7, list=F)
+    data.train <- tit_df[samp,]
+    data.test <- tit_df[-samp,]
+    x <- subset ( data.test, select = -Survived)
+    y <- data.test$Survived
+    model.nnet <- nnet(Survived ~ ., data = data.train, size = 3)
+    pred.nnet <- predict(model.nnet , x, type = 'class')
+    resultVec = append(resultVec, mean(pred.nnet == y))
+    
+    nrow(data.train)
+```
+
+# 1. Survived와 Death의 비중을 동일하게 하여 예측력 구해보기
+
+# 2. Fare를 추가하여 예측해 보기
+
+# 3. Age를 추가하여 예측해 보기
+
+# 4. Fare, Age를 추가하여 예측해 보기
+
+# 5. Age를 연령대로 구분하여 예측해 보기
+
+# 6. 국가별로 구분하여 예측해 보기
+
+# 7. Fare 를 분류하여 예측해 보기
+
+# 

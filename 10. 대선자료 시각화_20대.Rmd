@@ -1,0 +1,450 @@
+# 대선자료 시각화
+
+```{r}
+election <- read.csv("./Data/election_2022.csv")
+head(election)
+tail(election)
+str(election)
+election[1:150,]
+```
+
+```{r}
+sum(is.na(election)) # = 0 
+
+length(election$광역시도) # = 248 
+length(unique(election$광역시도))  # = 17
+
+length(election$시군구) # = 248
+length(unique(election$시군구)) # = 226 
+
+# key 값은 광역시도와 시군구를 합쳐서 맞춰야 댐 
+```
+
+### electionSum 이라는 칼럼 추가하기 ( electionSum = 이재명+윤석열+심상정)
+
+```{r}
+head(election)
+election$electionSum <-
+  apply(election[,5:7],1,sum)
+
+head(election)
+```
+
+electionSum 이 투표수의 몇 퍼센트 인가 -\> Addtion electionRatio colunm
+
+```{r}
+election$electionRatio <-election$electionSum/election[,4]*100
+  head(election)
+
+```
+
+electionRatio가 가장 높은 지역과 낮은 지역 구하기
+
+```{r}
+library(dplyr)
+head(arrange(election,electionRatio))
+```
+
+```{r}
+head(arrange(election, desc (electionRatio)))
+
+# 강사님 답안
+arrange(election[,c(1:2,9)], desc(electionRatio))[1,]
+arrange(election[,c(1:2,9)], desc(electionRatio))[nrow(election),]
+```
+
+arrange 말고 subset 사용해보기
+
+```{r}
+subset(election, electionRatio ==  max(election$electionRatio) )
+subset(election, electionRatio ==  min(election$electionRatio) )
+```
+
+### csv로 저장하기 (election_2022_job.csv)
+
+```{r}
+write.csv(election,"./Data/election_2022_job.csv", row.names = F)
+```
+
+```{r}
+readTest_election_job <- read.csv("./Data/election_2022_job.csv")
+head(readTest_election_job)
+
+```
+
+3D pie
+
+광역시도 로 group by 한 투표율 부터 만들어야 됨
+
+필요로 한거 aggregate() , unique(), arrange(), / \*100 , pie3D
+
+```{r}
+aggregate(election$electionSum ~ election$광역시도, election, sum)
+```
+
+```{r}
+aggregate(election$electionSum ~ election$광역시도, election, sum)[2]
+class(aggregate(election$electionSum ~ election$광역시도, election, sum)[2]) # = "data.frame"
+```
+
+```{r}
+# aggregate(election$electionSum ~ election$광역시도, election, sum)[2]
+# 를 전체 투표수를 합친거로 나눠서 각 광역시도별 %지 만들기
+
+# 총 투표수 의 합 
+
+quiz_elec_sum <- aggregate(electionSum ~ election$광역시도, election, sum)
+quiz_elec_sum<-arrange(quiz_elec_sum,desc(electionSum))
+# 각 광역시도별 총 투표수의 정렬 
+quiz_elec_sum
+
+class(unlist(unique(quiz_elec_sum[1])))
+quiz_elec_sum[1]
+quiz_elec_num <- quiz_elec_sum[-1]
+unlist(quiz_elec_num)
+
+
+
+class(unlist(quiz_elec_sum[,1]))
+
+
+
+
+# 20대 대선 총 투표수 = 33048710
+quiz_elect_totalsum <- sum(quiz_elec_sum[2]) 
+
+
+#quiz_elect_totalsum  20대 대선 총 투표수 = 33048710
+
+
+# 각 광역시도별 투표수 / 전체투표수  곱하기 100으로 퍼센트
+quiz_elect_mean<-(quiz_elec_sum[,2]/quiz_elect_totalsum ) * 100
+
+```
+
+```{r}
+par(family = "AppleGothic")
+
+ratio <- T_Sales / sum(T_Sales)*100
+label <- paste(unlist(quiz_elec_sum[,1]),"\n",round(quiz_elect_mean,2),"%")
+
+pie3D(quiz_elect_mean,  
+    main = "광역시도별 투표율",
+    labels = label,
+    labelcex = 0.7,
+    explode = 0.1
+    )
+```
+
+# 강사님 답안
+
+### 1. 광역시도별 합계를 구하기
+
+```{r}
+elect_gang_sum <-aggregate(투표수 ~ 광역시도, election, sum)
+head(elect_gang_sum)
+```
+
+### 2. 광역시도별 합계를 내림차순으로 정렬
+
+```{r}
+elect_gang_order<- arrange(elect_gang_sum, desc(투표수))
+head(elect_gang_order)
+```
+
+### 깜작퀴즈, 수도권 투표율이 전체 투표수의 몇퍼센트인가
+
+```{r}
+round((sum(elect_gang_order[c(1:2,5),2]) / quiz_elect_totalsum )*100 ,2 )
+```
+
+???? 강사님 답안이랑 값이 좀 다른데 ..\
+
+```{r}
+round(sum(elect_gang_order$투표수[c(1,2,5)])/sum(elect_gang_order$투표수)*100,2)
+```
+
+### 3D Pie Chart 그리기
+
+```{r}
+library(plotrix)
+```
+
+### 3. Ratio 구하기
+
+```{r}
+e_ratio <- round(elect_gang_order$투표수 / sum(elect_gang_order$투표수)*100 , 2)
+e_ratio
+```
+
+### 4. label 만들기
+
+```{r}
+label <- paste(elect_gang_order$광역시도,"\n",e_ratio,"%")
+label
+```
+
+### 5. chart 그리기
+
+```{r}
+par(family = "AppleGothic")
+pie3D(
+  elect_gang_order$투표수,
+  labels = label,
+  labelcex = 0.5,
+  main ="광역시도별 투표율",
+  radius = 0.9
+  
+)
+```
+
+# 강사님 답안이랑 뭔가 조금 다름
+
+# 윤석열 후보의 광역시도별 득표율
+
+3% 미만은 %를 생략함
+
+```{r}
+election
+```
+
+### 1. 광역시도별 윤석열 투표수로 정렬하기
+
+```{r}
+elec_yun <- aggregate(윤석열 ~ 광역시도, election, sum)
+head(elec_yun)
+```
+
+### 2. 광역시도별 합계를 내림차순으로 정렬
+
+```{r}
+elec_yun_order <- arrange(elec_yun, desc(윤석열))
+head(elec_yun_order)
+```
+
+### 3. Ratio 구하기
+
+```{r}
+e_yun_ratio <- round(elec_yun_order$윤석열 / sum(elec_yun_order$윤석열)*100 , 1)
+e_yun_ratio
+```
+
+### 4. label 만들기
+
+```{r}
+#label_yun <- paste(elec_yun_order$윤석열,"\n",e_yun_ratio,"%")
+#label_yun
+
+label_yun <- ifelse(e_yun_ratio>3, 
+                    paste(elec_yun_order$광역시도,"\n",e_yun_ratio,"%"),
+                    paste(elec_yun_order$광역시도)
+)
+
+label_yun
+```
+
+### 5. chart 그리기
+
+```{r}
+par(family = "AppleGothic")
+pie3D(
+  elec_yun_order$윤석열,
+  labels = label_yun,
+  labelcex = 0.5,
+  main ="윤석열 후보의 광역시도별 투표율",
+  radius = 0.9
+  
+)
+```
+
+# 윤석열 후보의 서울 득표 Top5 만 득표율로 표시하고 나머지 지역은 기타로 합치기
+
+1.  서울 시군구 top 5 먼저 뽑기
+2.  나머지 합치기
+3.  coulmn 6개
+
+### 서울 시군구 찾아내기
+
+```{r}
+election <- read.csv("./Data/election_2022.csv")
+election
+elec_yun <-election[,c(1,2,6)]
+elec_yun
+
+elec_yun_onlySeoul <-
+unique(subset(elec_yun,elec_yun$광역시도=='서울특별시'))[,-1]
+
+elec_yun_onlySeoul
+
+```
+
+```{r}
+library(dplyr)
+
+arrange(elec_yun_onlySeoul,desc(elec_yun_onlySeoul$윤석열))[1:5,]
+
+elec_yun5<-arrange(elec_yun_onlySeoul,desc(elec_yun_onlySeoul$윤석열))[1:5,]
+elec_yun5
+
+elec_yun22 <- arrange(elec_yun_onlySeoul,desc(elec_yun_onlySeoul$윤석열))[-c(1:5),]
+elec_yun22[1:length(elec_yun22),]
+elec_yun_22_sum <- sum(elec_yun22$윤석열)
+
+elec_yun_22_sum
+
+#행을 추가 row 
+EE <- data.frame(시군구="기타",윤석열=elec_yun_22_sum)
+EE
+realfinalYun <- rbind(elec_yun5,EE)
+realfinalYun
+```
+
+```{r}
+final_ratio <- round(realfinalYun$윤석열 / sum(realfinalYun$윤석열)*100 , 2)
+final_ratio
+```
+
+```{r}
+final_label_yun <-  paste(realfinalYun$시군구,"\n",final_ratio,"%")
+final_label_yun
+```
+
+### ㄴ윤석열 서울 탑 5 챠트
+
+```{r}
+par(family = "AppleGothic")
+pie3D(
+  realfinalYun$윤석열,
+  labels = final_label_yun,
+  labelcex = 0.5,
+  main ="윤석열 후보의 광역시도별 투표율",
+  radius = 0.9
+  
+)
+
+
+```
+
+# 윤석열 top5 강사님 답안
+
+### 서울득표 먼저 가져오기
+
+```{r}
+
+# subset(election,광역시도 == '서울특별시')
+
+election_seoul <- election[election$광역시도=='서울특별시',]
+election_seoul_yoon <-arrange(election_seoul, desc(윤석열))[,c(2,6)]
+head(election_seoul_yoon)
+```
+
+### Ratio
+
+```{r}
+election_seoul_yoon_ratio <-
+round(c(election_seoul_yoon[1:5,2], sum(election_seoul_yoon[-c(1:5),2])) / sum(election_seoul_yoon$윤석열) * 100,2)
+election_seoul_yoon_ratio
+```
+
+### Label 만들기
+
+```{r}
+
+election_seoul_yoon_label <-
+  paste(c(election_seoul_yoon$시군구[1:5],'기타'),"\n",election_seoul_yoon_ratio,"%")
+
+election_seoul_yoon_label
+```
+
+### chart 만들기
+
+```{r}
+par(family="AppleGothic")
+
+##### 이거만으로도 일단 나옴 #####
+pie3D(
+  election_seoul_yoon_ratio, ## <<<<<<<
+  main="윤석열 후보의 서울 득표 Top 5",
+  labels = election_seoul_yoon_label,
+ labelcex = 0.5,
+ explode = 0.1,
+)
+```
+
+# 대선주자 출생지별 득표율
+
+윤석열 후보 : 성북구
+
+```{r}
+ subset(election,시군구 == '성북구')
+ c(election$투표수-election$electionSum)
+ 
+ 
+ 
+ 
+ elec_sungbukgu <-subset(election,시군구 == '성북구')
+ elec_sungbukgu
+ elec_sungbukgu$기타 <- elec_sungbukgu$투표수 - elec_sungbukgu$electionSum
+ elec_sungbukgu[1,c(5:7,10)]
+ as.numeric(elec_sungbukgu[1,c(5:7,10)])
+```
+
+ratio
+
+```{r}
+
+as.numeric(elec_sungbukgu[1,c(5:7,10)])
+
+  
+elec_sungbukgu_final <- round(as.numeric(elec_sungbukgu[1,c(5:7,10)])/sum(as.numeric(elec_sungbukgu[1,c(5:7,10)]))*100,2)
+elec_sungbukgu_final
+elec_sungbukgu[,c(5:7,10)]
+
+```
+
+label
+
+```{r}
+
+elec_sungbukgu_label <-
+  paste(c(election_seoul_yoon$시군구[1:5],'기타'),"\n",election_seoul_yoon_ratio,"%")
+elec_sungbukgu[1,c(5:7,10)]
+election_seoul_yoon_label <-;
+
+elec_sungbukgu[,c(5:7,10)],'\n',elec_sungbukgu_final,'%'
+
+
+
+```
+
+# 대선주자 출생지별 득표율 강사님 답안
+
+```{r}
+ pob_yoon <- subset(election, 시군구 == '성북구')
+ pob_yoon
+```
+
+```{r}
+pob_yoon_ratio <-
+round(as.numeric(c(pob_yoon[,5:7],pob_yoon[,4] -sum(pob_yoon[,5:7]) )) / pob_yoon[,4] *100,2)
+pob_yoon_ratio
+```
+
+이재명, 윤석열,심상정,기타는 직접 써야댐
+
+이거 어케 뽑지 계속 고민햇는뎅 ...
+
+```{r}
+paste(c('ㅇㅈㅁ','ㅇㅅㅇ','ㅅㅅㅈ','ㄱㅌ'),'\n',pob_yoon_ratio,'%')
+```
+
+```{r}
+par(family='AppleGothic')
+pie3D(
+  pob_yoon_ratio,
+  main='성북구 투표율',
+  labels = paste(c('ㅇㅈㅁ','ㅇㅅㅇ','ㅅㅅㅈ','ㄱㅌ'),'\n',pob_yoon_ratio,'%'),
+  labelcex = 0.5,
+ explode = 0.1,
+)
+```

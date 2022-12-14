@@ -1,0 +1,30 @@
+# IRIS \#
+
+## Species 분류 \#
+
+-   총 5개의 컬럼으로 구성 되어 있음 -
+
+    Sepal.Lenght
+
+Sepal.Width {R} command option i
+
+```{r}
+plot(iris)    #-- command shift enter 하면 한번에 다 실행됨 
+```
+
+\-\-\-\--
+
+```{r}
+str(iris)
+
+```
+
+```{r}
+tail(iris)
+```
+
+## Species 2분류
+
+```{r}
+
+```

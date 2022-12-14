@@ -1,0 +1,162 @@
+# Mushroom을 인공신경망, rf, svm 으로 해보기
+
+```{r}
+library(dplyr)
+library(nnet)
+library(randomForest)
+library(caret)
+library(e1071)
+```
+
+```{r}
+mr <- read.csv('./Data/mushroom.csv', header = F)
+```
+
+```{r}
+for (i in 1:23){
+  mr[,i] <- as.factor(mr[,i])
+}
+for (i in 2:23){
+  mr[,i] <- as.numeric(mr[,i])
+}
+```
+
+```{r}
+mr2 <- data.frame(V1 = mr$V1)
+mr2$V1 <- as.factor(mr2$V1)
+mr2
+
+```
+
+```{r}
+count = 2
+for(i in 2:23){
+  for(j in sort(unique(mr[,i]))){
+    mr2 = cbind(mr2, mr[,i] ==j )
+    colnames(mr2)[count] <- paste("V",i,"_",j, sep="")
+    count = count +1
+  }
+}
+
+```
+
+## 인공신경망
+
+샘플데이터와 문제,정답 만들기
+
+```{r}
+samp <- createDataPartition(mr2$V1, p=0.7, list=F)
+data.train <- mr2[samp,]
+data.test <- mr2[-samp,]
+```
+
+```{r}
+head(mr2)
+```
+
+모델 만들기
+
+```{r}
+  model.nnet <- nnet(V1 ~ ., data = data.train, size = 3)
+```
+
+문제 및 정답 만들기
+
+```{r}
+x <- subset ( data.test, select = -V1)
+y <- data.test$V1
+```
+
+검증(test)
+
+```{r}
+ pred <- predict(model.nnet, x, type = "class") # class : 객관식 / raw : 주관식 
+
+```
+
+예측력 확인
+
+```{r}
+pred == y
+mean(pred == y)*100
+```
+
+정오표 확인
+
+```{r}
+table(pred,y)
+```
+
+## randomForest
+
+```{r}
+samp <- createDataPartition(mr2$V1, p=0.7, list=F)
+data.train <- mr2[samp,]
+data.test <- mr2[-samp,]
+x <- subset(data.test, select = -V1)
+y <- data.test$V1
+rf <- randomForest(V1 ~ ., data = data.train, ntree = 100) # ntree : ctree가 100번 돌아감 
+pred <- predict(rf, x)
+mean(pred == y)
+```
+
+```{r}
+rfFun <- function(n){
+ for (i in 1:n){
+    if(i == 1){
+      resultVec = c()
+    }#if end
+    samp <- createDataPartition(mr2$V1, p=0.7, list=F)
+    data.train <- mr2[samp,]
+    data.test <- mr2[-samp,]
+    x <- subset ( data.test, select = -V1)
+    y <- data.test$V1
+    rf <- randomForest(V1 ~ ., data = data.train, ntree = 100) 
+    pred <- predict(rf, x)
+    resultVec = append(resultVec, mean(pred == y))
+  }#for end
+  cat("---------------------------------------------\n")
+  cat("예측율 \n")
+  cat(resultVec,"\n")
+  cat("---------------------------------------------\n")
+  cat("평균예측율 : ",mean(resultVec),"\n")
+  cat("---------------------------------------------\n")
+}
+
+```
+
+```{r}
+rfFun(10)
+```
+
+## SVM
+
+```{r}
+
+svmFun <- function(n){
+ for (i in 1:n){
+    if(i == 1){
+      resultVec = c()
+    }#if end
+    samp <- createDataPartition(mr2$V1, p=0.7, list=F)
+    data.train <- mr2[samp,]
+    data.test <- mr2[-samp,]
+    x <- subset ( data.test, select = -V1)
+    y <- data.test$V1
+    model <- svm(V1 ~., data = data.train)
+    pred <- predict(model,x)
+    resultVec = append(resultVec, mean(pred == y))
+  }#for end
+  cat("---------------------------------------------\n")
+  cat("예측율 \n")
+  cat(resultVec,"\n")
+  cat("---------------------------------------------\n")
+  cat("평균예측율 : ",mean(resultVec),"\n")
+  cat("---------------------------------------------\n")
+}
+
+```
+
+```{r}
+svmFun(5)
+```

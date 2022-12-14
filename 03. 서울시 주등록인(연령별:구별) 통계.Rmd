@@ -1,0 +1,5 @@
+```{r}
+read.csv('./p_seoul_age_gu/seoul_age_gu.csv', header = T)
+# 서울시 주민등록인구(연령별/구별)통계
+# https://data.seoul.go.kr/dataList/10718/S/2/datasetView.do
+```

@@ -1,0 +1,47 @@
+# 의사결정 나무(DecisionTree)
+
+```{r}
+library(party)
+```
+
+```{r}
+library(caret)
+```
+
+Sampling
+
+```{r}
+set.seed(1234)
+samp <- createDataPartition(iris$Species, p=0.7, list=F)
+samp                                    # 70%만 가져옴
+```
+
+```{r}
+#학습용 
+data.train <- iris[samp,]
+#검증용
+data.test <- iris[-samp,]
+```
+
+```{r}
+#------ 문제지/ 답안지 \
+x <- subset(data.test, select = -Species)
+y <- data.test$Species
+```
+
+```{r}
+#학습시키기
+iris_tree <- ctree(Species ~ ., data = data.train)
+```
+
+```{r}
+#시험보기
+pred <- predict(iris_tree, x)
+head(pred)
+```
+
+```{r}
+#예측력
+mean(pred == y)
+table(pred, y)
+```

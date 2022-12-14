@@ -1,0 +1,50 @@
+# 
+
+## 인구고령화 에 따른 연령별/주거지별 119 출동건수와 주변 의료기관 역학관계에 따른 향후 보건수요에 관한 통계조사
+
+```{r}
+
+head(read.csv('./p_seoul_age_gu/201412_201512.csv', header = T, fileEncoding = "euc-kr"))
+head(read.csv('./p_seoul_age_gu/201612_202112.csv', header = T, fileEncoding = "euc-kr"))
+# 행정안전부 주민등록 인구 및 세대현황
+# https://jumin.mois.go.kr/ageStatMonth.do
+
+read.csv('./seoul_age_gu.csv', header = T)
+# 서울시 주민등록인구(연령별/구별)통계
+# https://data.seoul.go.kr/dataList/10718/S/2/datasetView.do
+
+
+read.csv('./over65.csv', header = T)
+# 서울시 고령자현황 (동별) 통계
+# https://data.seoul.go.kr/dataList/10020/S/2/datasetView.do?stcSrl=10020
+
+
+#경기 통계 - 시군별 연령별 인구(외국인제외)
+# https://stat.gg.go.kr/statgg/tblInfo/TblInfoList.html;jsessionid=ED36A8F829CA95BBD8A67B6BED74E4CC
+
+
+read.csv('./seoul_119.csv', header = T)
+# 서울시 119 구조활동 실적 (구별) 통계
+# https://data.seoul.go.kr/dataList/330/S/2/datasetView.do?stcSrl=330
+
+
+read.csv('./119gugub.csv', header = T)
+# 서울시 119 구급활동 실적 (소방서별) 통계
+# https://data.seoul.go.kr/dataList/329/S/2/datasetView.do
+
+
+read.csv('./hospital_gu.csv', header = T)
+# 서울시 의료기관 (구별) 통계
+# https://data.seoul.go.kr/dataList/173/S/2/datasetView.do
+
+read.csv('./pharmacy.csv', header = T, fileEncoding = "euc-kr")
+# 서울시 약국 인허가 정보
+# https://data.seoul.go.kr/dataList/OA-16484/S/1/datasetView.do
+```
+
+```{r}
+#str
+library(stringr)
+# arrange
+library(dplyr)
+```

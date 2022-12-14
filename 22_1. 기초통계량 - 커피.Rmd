@@ -1,0 +1,63 @@
+```{r}
+cafe <- read.csv("./Data/coffee.csv")
+head(cafe)
+```
+
+```{r}
+summary(cafe)
+```
+
+```{r}
+str(cafe)
+```
+
+# 기초통계량 산출
+
+```{r}
+# 커피먼저 알아보자 
+# 각자 빈도수 
+table(cafe$Coffee)
+```
+
+### 범위 빈도수
+
+```{r}
+# 범위를 줘서 분석해보기
+coffee_range <- seq(0,60,10)
+#cut(cafe$Coffee, breaks = coffee_range)
+# [ ] ( ) 이걸 봐야댐 
+table(cut(cafe$Coffee, breaks = coffee_range)) # 초과~ 이하 
+table(cut(cafe$Coffee, breaks = coffee_range, right = F)) # 이러면 이상~ 미만 
+```
+
+### 줄기잎 그래프
+
+```{r}
+stem(cafe$Coffee)
+```
+
+```{r}
+#어느 메뉴가 안정적으로 많이 팔리냐 <- 변동계수를 구해서 낮을수록 안정적으로팔린다는 뜻으로 생각하면댐
+
+# 커피와 과일주스의 변동계수 구하기 
+# 변동계수(CV) - Coefficient of Variation = 표준편차 / 평균 
+
+
+sd(cafe$Coffee)/ mean(cafe$Coffee) # = 0.6508198
+sd(cafe$Fruit.Cup)/ mean(cafe$Fruit.Cup) # = 1.078586
+```
+
+```{r}
+sort(cafe$Fruit.Cup)
+
+# 판매가 되지 않은 날도 있음-> 회전율이 좋지 않음 -> 과일은 쉽게 썩기 때문에 좋은 선택이 아님 
+```
+
+```{r}
+# 보관이 과일보다 용이하며 안팔린 날은 없음 
+sort(cafe$Coffee)
+```
+
+```{r}
+boxplot(cafe$Coffee, cafe$Fruit.Cup)
+```

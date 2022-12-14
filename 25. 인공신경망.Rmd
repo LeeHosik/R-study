@@ -1,0 +1,166 @@
+# 인공신경망
+
+머신러닝 : 정형화 데이타, 텍스트 등
+
+딮러닝 : 비정형 데이터 , 음악,그림,동영상 등
+
+```{r}
+head(iris)
+```
+
+학습데이터는 공평하게 준비해서 시켜야지 골고루 점수가 잘 나옴 ?
+
+### 학습용 데이터 와 검증용 데이터 분리
+
+sample data
+
+```{r}
+
+set.seed(1234)
+c(sample(1:50,35), sample(51:100,35), sample(101:150,35))
+```
+
+```{r}
+set.seed(1234)
+samp <- c(sample(1:50,35), sample(51:100,35), sample(101:150,35))
+samp2 <- sample(1:150,105)
+```
+
+학습데이터
+
+```{r}
+data.train <- iris[samp,]
+```
+
+검증용데이터
+
+```{r}
+data.test <- iris[-samp,]
+
+```
+
+데이터 분류 확인하기
+
+```{r}
+summary(data.train)
+summary(data.test)
+```
+
+인공신경망으로 학습시키기
+
+```{r}
+library(nnet)
+```
+
+모델 만들기
+
+```{r}
+model.nnet <- nnet(Species ~ ., data = data.train, size = 3 ) # size : 은닉층 갯수 
+```
+
+문제 및 정답 만들기
+
+```{r}
+#문제
+x <- subset(data.test , select = -Species)
+head(x)
+```
+
+```{r}
+#정답
+y <- data.test$Species
+head(y)
+```
+
+검증(test)
+
+```{r}
+pred <- predict(model.nnet, x, type = "class") # class : 객관식 / raw : 주관식 
+head(pred)
+```
+
+예측력 확인 ( 시험점수 확인)
+
+```{r}
+pred == y
+mean(pred == y)*100
+```
+
+정오표 확인
+
+```{r}
+table(pred,y)
+```
+
+사용가능하다고 판단되면 모든 데이터를 기준으로 학습
+
+기존에는 예측력을 확인하곶 70%만 학습을 시킨거고 나머지 30%마저 더 공부시켜야댐
+
+```{r}
+model.nnet <- nnet(Species ~ ., data = iris, size = 3)
+```
+
+간단quiz
+
+Sepal.Length = 5.3
+
+Sepal.Width = 3.3
+
+Petal.Length = 1.6
+
+Petal.Width = 0.3
+
+```{r}
+xx <- data.frame(Sepal.Length = 5.3,Sepal.Width = 3.3,Petal.Length = 1.6,Petal.Width = 0.3)
+xx
+```
+
+```{r}
+pred <- predict(model.nnet, xx, type = "class") # class : 객관식 / raw : 주관식 
+head(pred)
+
+# 알고자 하는거는 x에 있음. x는 data.frame
+#data.frame()을 만들어서 넣기만 하면 됨
+```
+
+```{r}
+predict(model.nnet, 
+        list(
+          Sepal.Length = 5.3,
+          Sepal.Width = 3.3,
+          Petal.Length = 1.6,
+          Petal.Width = 0.3
+        )
+        , type = "class")
+
+# 정답은 맞는데 이 방식은 틀린거라고 함 
+```
+
+간단 quiz
+
+Sepal.Length = 9.3
+
+Sepal.Width = 2.2
+
+Petal.Length = 7.5
+
+Petal.Width = 3.5
+
+```{r}
+xy <- data.frame(
+  Sepal.Length = 9.3,
+  Sepal.Width = 2.2,
+  Petal.Length = 7.5,
+  Petal.Width = 3.5
+  )
+
+predict(model.nnet, xy, type = "class")
+
+# 내준 문제는 서머리를 보면은 iris 데이터를 넘어감 
+# 공부범위 안의 데이터가 없이 답을 낸거임
+# 들어온 범위의 min 과 max 범위를 지정해 줘야댐 
+```
+
+```{r}
+summary(iris)
+```

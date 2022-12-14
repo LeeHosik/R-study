@@ -1,0 +1,130 @@
+# 막대차트
+
+# 투표수가 가장 많은 4지역 (광역시도)의 각 후보별 득표수를 막대 그래프로 그리기
+
+### 숫자의 크기를 보여주는게 막대그래프
+
+지수를 일반 숫자로 표시
+
+options(scipen = 100)
+
+1.  광역시도별 합치기
+2.  투표수 많은 4지역 고르기(광역시도)
+3.  후보별로 득표수를 더하기
+
+```{r}
+election <- read.csv("./Data/election_2022.csv")
+election
+#str
+library(stringr)
+# arrange
+library(dplyr)
+# 3D chart
+library(plotrix)
+```
+
+```{r}
+head(election)
+```
+
+```{r}
+# 투표수가 많은 4지역 + 후보 투표수 구하기 
+arrange(aggregate(cbind(투표수,이재명,윤석열,심상정) ~ 광역시도, election, sum),
+        desc(투표수))[1:4,3:5]
+rnames
+elec_4<-
+arrange(aggregate(cbind(투표수,이재명,윤석열,심상정) ~ 광역시도, election, sum),
+        desc(투표수))[1:4,3:5]
+elec_4
+elec_5<-as.matrix(elec_4)
+elec_5
+
+```
+
+```{r}
+par(family="AppleGothic")
+barplot(
+  as.matrix(elec_4),
+  ylab="득표수",
+  main="투표수가 가장 많은 4지역의 후보별 득표수 차이",
+  #legend.text = T,
+  space = 0.5,
+  ylim=c(0,c(max(elec_4)+min(elec_4))),
+  names = c("경기도","서울특별시","부산광역시","경상남도"),
+  beside = T
+)
+# legend( # 범례 x,y축의 값에 따라 위치를 잡음
+#   #범례는 그래프 침범하지 않도록 꼭꼮꼬꼬꼬꼬꼬꼬꼬꼮꼬꼬꼮꼬 ******8 중요함 가리지 말것 
+#    4.44,100,
+#    c("야구장","축구장",'해변가'),
+#    col = c('red', 'green', 'blue'),
+#    pch = c(21,22,16),
+#    lty = c(1,2,4),
+#    #크기 조정
+#    cex = 0.7,
+#      )
+```
+
+```{r}
+par(family="AppleGothic")
+options(scipen=100)
+elec_5
+barplot(
+  t(elec_5),
+  ylab="득표수",
+  cex.axis=0.6,
+  main="투표수가 가장 많은 4지역의 후보별 득표수 차이",
+  col=c("skyblue","red","yellow"),
+  ylim=c(0,5000000),
+  beside = T,
+  legend.text = T,
+  names=c("경기도","서울특별시","부산광역시","경상남도"),
+#options(scipen =100)
+)
+```
+
+# 투표수가 높은 시군구(5개)의 후보별 득표수
+
+```{r}
+election
+sigungu <-arrange(election,desc(election$투표수))[1:5,c(1:2,5:7)]
+
+arrange(aggregate(cbind(투표수,이재명,윤석열,심상정) ~ 시군구, election, sum),
+        desc(투표수))[1:4,3:5]
+as.matrix(sigungu[,1:2])
+past(as.matrix(sigungu[,1:2]))
+t(sigungu[,c(3:5)])
+```
+
+```{r}
+par(family="AppleGothic")
+options(scipen=999)
+barplot(
+  t(sigungu[,c(3:5)]),
+  main = "투표수 높은 지역의 후보별 투표수",
+  legend.text = T,
+  ylim=c(0,600000),
+  col=c("skyblue","red","yellow"),
+  names=c(paste(as.matrix(sigungu[1:5,1]),as.matrix(sigungu[1:5,2]))),
+  cex.axis=0.5,
+  space = 0.6,
+  cex.names = 0.7
+  
+)
+```
+
+```{r}
+as.matrix(sigungu[1,1:2])
+paste(as.matrix(sigungu[1:5,1]),as.matrix(sigungu[1:5,2]))
+```
+
+## 강사님 답안
+
+```{r}
+elec_top5 <- arrange(election,desc(투표수))[1:5,c(1:2,5:7)]
+elec_top_maxtric <- t(arrange(election,desc(투표수))[1:5,5:7])
+elec_top_maxtric
+
+colnames(elec_top_maxtric)<- paste(elec_top5$광역시도,elec_top5$시군구)
+elec_top_maxtric
+```

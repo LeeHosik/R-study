@@ -1,0 +1,121 @@
+```{r}
+elemental <- read.csv("./Data/elemental.csv", header = T)
+elemental
+ncol(elemental)
+
+head(elemental)
+
+tail(elemental)
+```
+
+지역 / 연도 / 남,여 = 합계 /
+
+```{r}
+allSchool <- read.csv("./Data/allSchoolElemental.csv", header = T)
+head(allSchool)
+```
+
+```{r}
+procreation <-  read.csv("./Data/procreation.csv", header = T)
+head(procreation)
+tail(t(procreation))
+```
+
+# procreation 전정제 
+
+```{r}
+library(stringr)
+# arrange
+library(dplyr)
+# 3D chart
+```
+
+## 불필요한 row 와 column 제거 
+
+```{r}
+
+procreation
+
+# 불필요한 컬럼 지우기 1997~1999년 
+# row에 column name 
+procreation[,-c(2:25)]
+procreation <- procreation[,-c(2:25)]
+procreation
+
+# NA 확인 
+sum(is.na(procreation))
+str(procreation)
+
+```
+
+### '-'을 숫자 '0' 으로 바꾸기 
+
+```{r}
+
+for(i in 1:ncol(procreation)){
+  procreation[,i] <- str_replace_all(procreation[,i],'-','0') 
+}
+sum(str_detect(procreation,"-")) # = 0
+```
+
+```{r}
+# col
+procreation[-c(1:3),1]
+length(procreation[-c(1:3),1])
+str(procreation[-c(1:3),1])
+ncol(procreation[-c(1:3),1])
+
+rep(procreation[-c(1:3),1] , 25)
+head(rep(procreation[-c(1:3),1] , 25))
+```
+
+```{r}
+
+# row 2
+
+rep(c('15-19세','20-24세','25-29세','30-34세','35-39세','40-44세','45-49세'),21)
+colnames(procreation) <-rep(c('합계출산율','15-19세','20-24세','25-29세','30-34세','35-39세','40-44세','45-49세'),21)
+nrow(procreation)
+ncol(procreation)
+procreation
+procreation[-c(1:3),]
+procreation <- 
+head(procreation)
+tail(procreation)
+procreation[4:28,]
+```
+
+## row2  age
+
+```{r}
+#column 
+나이 <- rep(c('15-19세','20-24세','25-29세','30-34세','35-39세','40-44세','45-49세'),22)
+length(rep(c('15-19세','20-24세','25-29세','30-34세','35-39세','40-44세','45-49세'),22)) 
+# = 147
+나이
+```
+
+## row 1 year
+
+```{r}
+
+년도 <- rep(c(2000:2021), each = 7)
+length(rep(c(2000:2021), each = 7)) # = 154
+년도
+```
+
+## Column  구 
+
+```{r}
+자치구명 <- procreation[-c(1:3),1]
+length(procreation[-c(1:3),1]) # = 25
+length(rep(procreation[-c(1:3),1],21)) # = 550 
+
+자치구명
+```
+
+## DataFrame 만들기
+
+```{r}
+data.frame(년도, 나이)
+```

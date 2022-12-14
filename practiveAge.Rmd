@@ -1,0 +1,106 @@
+### <https://blog.naver.com/PostView.nhn?blogId=youji4ever&logNo=221449056834>
+
+# 자체 데이터 정제 연습.
+
+```{r}
+practive <- read.csv("./Data/practiveAge.csv", header = T)
+
+head(practive)
+tail(practive)
+str(practive)
+summary(practive)
+plot(practive)
+practive
+```
+
+### score에 max 99 와 age에 max 89 가 왠지 눈에 거슬린다
+
+```{r}
+sum(practive$score>50) # 50이 넘는 수가 4개 확인됨
+sum(practive$age>85) # 70이 넘는 수가 6개, 80이 넘는 수가 3개, 85가 넘는 수가 1개
+
+```
+
+age는 실제 나이가 대입되었다고 생각하면 될거같고, score의 99를 어떻게든 처리해야될거 같다
+
+scroe는 평가점수로 1\~10점 인데 99는 결측치를 작성하는 관행?전통? 방법이라함
+
+이녀석을 처리해야된다
+
+해당 블로그에서는 일단 NA처리함
+
+```{r}
+practive$score <- ifelse(practive$score == 99 , NA, practive$score)
+summary(practive$score) # Na's가 4개로 체크됬고 Max 가 10으로 바뀜 
+```
+
+99를 NA 처리 하는 다른 방법으로
+
+처음에 파을을 받아올때 결측치로 정해놓은 값을 알고 있다면 받아올때 바꿔서 받아오는 방법이 있음.
+
+```{r}
+practive2 <- read.csv("./Data/practiveAge.csv", header = T, na.strings = c("99"))
+```
+
+여기서 c("99") 기 때문에, 여러가지 다른 수도 같이 NA 처리 가능한듯
+
+결측이 있는 데이터의 평균을 구하려면 na.rm=T 하면 NA(결측)을 제외하고 계산이 가능함
+
+```{r}
+mean(practive$score,na.rm = T) # 하지만 이 방법은 강사님이 하지 말라고 한거 같은데 ..
+```
+
+???? 뭔 예제가 이해안하고 확인차 만듦
+
+```{r}
+is.na(c(1,NA,3,NA,5))
+
+nonna.sum <- sum(practive$score[!is.na(practive$score)])
+nonna.length <- length(practive$score[!is.na(practive$score)])
+is.na(practive$score) # 150개의 데이터중 NA가 True로 나옴
+!is.na(practive$score) # 리버스 해서 NA가 False가 됨 
+practive$score[!is.na(practive$score)] # True 인 값만 나옴 
+nonna.sum / nonna.length 
+#= 바로 위에 5.732877 평균값을 구하는 다른 방법인데 이걸 왜 이렇게 해서 평균을 구하는지 몰겠네
+```
+
+이 게시글 사람은 NA 값을 평균값으로 쳐 넣는거 같은데 강사님이 말씀하신 방법대로 평균을 넣는거는 아닌거 같음
+
+일단 그 다음 과정
+
+숫자로 되어 있는 지역규모와 성별 변수를 범주형 데이터 로 변환하기 위해 factor() 함수를 이용해서 바꾸자
+
+```{r}
+practive$scale <- factor(practive$scale)
+practive$sex <- factor(practive$sex)
+str(practive)
+
+head(practive$sex)
+```
+
+이로서 준비가 끝났따고 함 나는 아직임 ..
+
+```{r}
+practive$score
+# NA 값을 처리해야됨
+
+summary(practive$score)
+#  Min   . 1st Qu.  Median   Mean    3rd Qu.     Max.      NA's 
+# 1.000   4.000   6.000     5.733    7.000    10.000       4 
+
+```
+
+중앙값이 6으로 나옴. 평균도 5.73으로 괜찮아보이므로 NA를 중앙값 6으로 대입
+
+우선 NA값 4개의 위치를 찾아야 됨 그리고 바꿀꺼임
+
+준비물 : NA 찾기, replace로 바꿔볼꺼임
+
+```{r}
+class(practive$score)
+as.factor(practive$score) 
+  # factor는 numeric과 character를 다 갖는녀석이라 int만 구성되어있떤 score는 여전히 int 라서 grep이 안되는듯 
+as.character(practive$score) # ?? 그래도 인티져네 ...?
+class(practive$score) 
+grep("NA",practive$score)
+```

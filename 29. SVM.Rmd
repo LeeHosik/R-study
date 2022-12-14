@@ -1,0 +1,33 @@
+# SVM(Support Vector Machine)
+
+```{r}
+library(e1071)
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(iris$Species, p=0.7, list = F)
+data.train <- iris[samp,]
+data.test <- iris[-samp,]
+```
+
+```{r}
+#문제, 정답 만들기
+x <- subset(data.test, select = -Species)
+y <- data.test$Species
+```
+
+```{r}
+#학습시키기
+model <- svm(Species ~., data = data.train)
+```
+
+```{r}
+pred <- predict(model,x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```

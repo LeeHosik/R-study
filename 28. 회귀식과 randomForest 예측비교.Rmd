@@ -1,0 +1,147 @@
+# 교통사고 예측하기(회귀식과 RandomForest 예측비교)
+
+```{r}
+seoul <- read.csv('./Data/newSeoul2019.csv')
+head(seoul)
+```
+
+종로구를 집중적으로 함 봐보자
+
+```{r}
+# 종로구 데이터셋 만들기
+JongRo <- subset(seoul,자치구명=='종로구')
+nrow(JongRo)
+```
+
+```{r}
+str(JongRo)
+```
+
+```{r}
+sum(is.na(JongRo))
+```
+
+```{r}
+head(JongRo)
+tail(JongRo)[,-3]
+
+
+```
+
+```{r}
+# nrow(JongRo) = 108
+# rownames 정리
+
+rownames(JongRo) <- c()
+```
+
+```{r}
+JongRo
+```
+
+종로구의 발생건수와 부상자수의 상관계수
+
+```{r}
+
+cor(JongRo$발생건수, JongRo$부상자수) # = 0.9208914
+
+```
+
+종로구의 발생건수와 부상자수의 산포도 및 회귀선 그리기
+
+```{r}
+par(family="AppleGothic")
+plot(JongRo$부상자수 ~ JongRo$발생건수)
+iqr <- lm(JongRo$부상자수  ~ JongRo$발생건수)
+abline(iqr, col="red")
+```
+
+예측율과 회귀식을 구해보자
+
+```{r}
+summary(iqr)
+```
+
+    발생건수 ***
+
+    p-value: < 2.2e-16
+    djusted R-squared:  0.8466 
+    Residual standard error: 9.816
+
+```{r}
+iqr
+```
+
+### 회귀식 : 부상자수 = 1.360 \* 발생건수
+
+회귀식으로 발생건수가 100건일때의 부상자수 예측
+
+```{r}
+1.360*100
+ 
+```
+
+```{r}
+accident <- function(x){
+  y=(x*1.360 )
+  return(y)
+}
+```
+
+randomForest로 발생건수가 100건일때의 부상자수 예측
+
+```{r}
+library(randomForest)
+library(caret)
+```
+
+```{r}
+rf <- randomForest(부상자수 ~ 발생건수, data = JongRo, ntree = 100) # ntree : ctree가 100번 돌아감
+```
+
+```{r}
+rf_accident <- function(x){
+  y = predict(rf, list(발생건수 = x))
+  return(y)
+}
+```
+
+```{r}
+
+predict(rf, list(발생건수 = 100))
+```
+
+발생건수가 145건일 경우 비교
+
+```{r}
+#회귀식
+accident(145)
+rf_accident(145)
+```
+
+발생건수가 150건
+
+```{r}
+accident(150)
+rf_accident(150)
+```
+
+발생건수 200
+
+```{r}
+accident(200)
+rf_accident(200)
+```
+
+# 데이터를 맹신하면 안됨
+
+산포도를 무조건 확인해야됨
+
+대충 90\~120 사이에는 데이터가 많은데 130 이상부터는 데이터가 적음
+
+```{r}
+accident(90)
+rf_accident(90)
+```
+
+데이터가 적은 구간에는 회귀식이 randomforest보다 더 정확함

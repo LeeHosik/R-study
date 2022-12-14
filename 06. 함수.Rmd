@@ -1,0 +1,67 @@
+# 함수
+
+함수는 코드의 집합임
+
+```{r}
+vec <- 10:20
+min(vec)
+max(vec)
+mean(vec)
+median(vec)
+sum(vec)
+sd(vec)
+summary(vec)
+table(vec)
+range(vec)
+
+```
+
+```{r}
+gugudan2315 <- function(x,y){
+  for(i in x){
+    for(j in y){
+      cat(i," X ", j," = ",i*j,"\n")
+    }
+    cat("------------","\n")
+  }
+}
+
+gugudan2315(2:3,1:5)
+```
+
+# 결측치(NA) 자료 평균 계산
+
+```{r}
+data <- c(10, 20, 5, 4, 40, 7, NA, 6, 3, NA, 2, NA)
+```
+
+```{r}
+summary(data)
+is.na(data)
+sum(is.na(data))
+table(is.na(data))
+```
+
+```{r}
+mean(data, na.rm=T) 
+```
+
+```{r}
+library(stringr)
+```
+
+```{r}
+# 1) NA <- 0 으로 대체 후 평균값 구하기 
+
+mean(ifelse(is.na(data), 0, data)) # NA 값을 0으로 대체 후 평균 구하기 
+data
+```
+
+```{r}
+mean(ifelse(is.na(data),mean(data, na.rm = T), data)) # 평균의 평균 
+mean(ifelse(is.na(data),median(data, na.rm = T), data)) #중앙값 평균 
+mean(ifelse(is.na(data),max(data, na.rm = T), data)) # 최대값 평균
+
+```
+
+### NA 값을 무조건 없애는게 좋은게 아님. NA를 없앤 후 평균값을 구한 뒤, NA에 어떤 값을 넣어서 처리 할지, 없앨지(?) 정해야 됨, 지금 3가지 경우 중앙값이 가장 평균과 근접함

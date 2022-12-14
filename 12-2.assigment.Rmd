@@ -1,0 +1,209 @@
+# 데이터 보고 주제정해서 강사님께 PDF로 보내기
+
+```{r}
+metro <- read.csv("./Data/metro_total_1992_2020.csv")
+```
+
+```{r}
+pop <- read.csv("./Data/population_1960_2020.csv")
+```
+
+## 
+
+```{r}
+head(metro)
+tail(metro)
+metro
+```
+
+```{r}
+head(pop)
+tail(pop)
+pop
+```
+
+```{r}
+tail(metro)
+```
+
+```{r}
+str(metro)
+```
+
+# 뭘 만들 수 있을까?
+
+-   pop
+
+-   1960년 부터 인구 증감 추세
+
+-   남녀 비율
+
+-   
+
+<!-- -->
+
+-   metro
+
+-   지역별 인구 증감 추세
+
+-   
+
+상기 데이터로 향후 인구변화, 지역이동?활성화? + 변화폭이 큰거에 대한 근거?이유 몇가지 찾아보기
+
+지역별 인구수에 따른 부동산 가격변동 ,
+
+출생율 감소? \<- 총 인구수가 안줄어듬 \<- 인구 고령화?
+
+ㄴ인구층 데이터 필요 \<- 의료시설이 좋아진다? \<- 병원갯수 ? 의료인 수 증가 ?
+
+ㄴ 변화가 있다면 각 인구층 대별로의 소비/ 시장 활성화 ?
+
+```{r}
+head(metro)
+metro[,-2]
+```
+
+```{r}
+head(pop)
+pop$년도
+pop92 <- subset(pop,pop$년도>1991)
+pop92 <- pop92[,-2]
+
+tail(pop92)
+```
+
+```{r}
+
+pop92 <-pop92[,-2]
+
+newPop <- data.frame(년도=pop92$년도, 남자=pop92$남자, 여자=pop92$여자)
+#tail(as.matrix(c(newPop$남자:newPop$여자)))
+
+tail(newPop$남자:newPop$여자)
+
+
+
+newPop <- newPop[,-1] # nrow = 29
+t(newPop)
+as.matrix(t(newPop))
+pop92
+newPop
+
+length(newPop$남자)
+```
+
+```{r}
+par(family="AppleGothic")
+barplot(
+  t(newPop),
+   ylim=c(0,50000000),
+   legend.text = T,
+  beside = T,
+  
+
+)
+
+
+
+
+```
+
+```{r}
+par(family="AppleGothic")
+options(scipen=100)
+plot(
+  newPop$남자/10000,
+  col="blue",
+  type='l',
+  main="년도별 성비",
+  axes = F,
+  ann = F,
+)
+lines(
+  newPop$여자/10000,
+  col="orange"
+)
+
+legend(
+   25,2400,
+   c("남자","여자"),
+   col = c('blue', 'orange'),
+   lty = c(1,1),
+   cex = 0.7,
+)
+
+axis(  # 새로 만들기
+  1, #x축에 대해서 만들거야
+  at = 1:29,
+  lab = rep(1992:2020,1,29),
+  cex.axis=0.5
+)
+
+axis(
+  2, #y축 만들기
+  ylim=c(0,1),
+  cex.axis=0.5
+ )
+```
+
+```{r}
+par(family="AppleGothic")
+options(scipen=100)
+plot(
+  newPop$남자/10000,
+  col="blue",
+  type='l',
+  main="년도별 성비",
+  ann = F,
+  ylim = c(1900,2800),
+  axes = F
+)
+lines(
+  newPop$여자/10000,
+  col="orange"
+)
+
+legend(
+   25,2400,
+   c("남자","여자"),
+   col = c('blue', 'orange'),
+   lty = c(1,1),
+   cex = 0.7,
+)
+axis(  # 새로 만들기
+  1, #x축에 대해서 만들거야
+  at = 1:29,
+  lab = rep(1992:2020,1,29),
+  cex.axis=0.5
+)
+# 
+axis(
+  2, #y축 만들기
+  #ylim=c(0,1),
+  cex.axis=0.5
+  )
+title(
+  xlab = "Year",
+)
+title(
+  ylab = "Count (단위:만)",
+  )
+title(
+  main="1992년 - 2020년 남녀 인구"
+)
+```
+
+```{r}
+plot(
+  metro
+)
+```
+
+```{r}
+par(family="AppleGothic")
+barplot(
+  as.matrix(metro[,c(2:3)]),
+  beside = T,
+  main="년도별 전인원대비 서울거주 인원 비교"
+)
+```

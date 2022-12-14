@@ -1,0 +1,126 @@
+# **서울시 고령자현황 (동별) 통계**
+
+<https://data.seoul.go.kr/dataList/10020/S/2/datasetView.do?stcSrl=10020>
+
+```{r}
+#str
+library(stringr)
+# arrange
+library(dplyr)
+```
+
+```{r}
+seoul_goreyung <- read.csv('./seoul_goreyung.csv', header= T)[-1,-c(1)]
+seoul_goreyung
+```
+
+### colnames, rownames 정리
+
+```{r}
+colnames(seoul_goreyung) <- c("년도","종로구","중구","용산구","성동구","광진구","동대문구","중랑구","성북구","강북구","도봉구","노원구","은평구","서대문구","마포구","양천구","강서구","구로구", "금천구", "영등포구" ,"동작구","관악구","서초구","강남구","송파구","강동구")
+
+rownames(seoul_goreyung) <- c()
+```
+
+```{r}
+seoul_goreyung
+```
+
+```{r}
+seoul_goreyung
+str(as.matrix(seoul_goreyung)[,-1])
+
+as.numeric(seoul_goreyung)
+```
+
+### as.numeric
+
+```{r}
+for(i in 1:ncol(seoul_goreyung)){
+  seoul_goreyung[,i] <- as.numeric(seoul_goreyung[,i])
+}
+seoul_goreyung
+```
+
+```{r}
+    t(as.matrix(seoul_goreyung[1,]))
+```
+
+```{r}
+
+par(family="AppleGothic")
+options(scipen=999)
+
+ plot(
+   t(as.matrix(seoul_goreyung[1,])),
+   type = 'o',
+   col = 1,
+   ylim = c(500,110000),
+   main = "2014 ~ 2021 년 서울특별시 60대 이상 인구분포",
+  ylab = "인구수 ( 단위 : 명)",
+  xlab = "자치구명",
+  axes = F, # frame 없애기
+  #ann = F,  # 왼쪽 abc랑 밑에 index 없애기
+   )
+ 
+ lines(
+  t(as.matrix(seoul_goreyung[2,])),
+ type = 'o', 
+ col = 2)
+ 
+ lines(
+  t(as.matrix(seoul_goreyung[3,])),
+ type = 'o', 
+ col = 3)
+ 
+ lines(
+  t(as.matrix(seoul_goreyung[4,])),
+ type = 'o', 
+ col = 4)
+ 
+ lines(
+  t(as.matrix(seoul_goreyung[5,])),
+ type = 'o', 
+ col = 5)
+ 
+ lines(
+  t(as.matrix(seoul_goreyung[6,])),
+ type = 'o', 
+ col = 6)
+ lines(
+  t(as.matrix(seoul_goreyung[7,])),
+ type = 'o', 
+ col = 7)
+ lines(
+  t(as.matrix(seoul_goreyung[8,])),
+ type = 'o', 
+ col = 8)
+ 
+ 
+ legend(
+  "bottomright",
+ #c(seq(2014,2021,1)),
+ c('2021','2020','2019','2018','2017','2016','2015','2014'),
+  cex = 0.8, 
+  pch = 1, 
+  col = 8:1, 
+  lty = 1,
+)
+
+axis(  
+  1, #x축
+  at = 1:24, # 24개 
+  lab = c('종로구','중구','용산구','성동구','광진구','중랑구','성북구','강북구',
+          '도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구',
+          '금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'
+          ),
+  cex.axis=0.2
+)
+
+axis(
+  2, #y축
+  #ylim = c(0,400)
+)
+ 
+
+```

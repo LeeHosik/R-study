@@ -1,0 +1,144 @@
+# Mushroom을 One-Hot Encoding으로 Machine Learning 사용하기
+
+```{r}
+mr <- read.csv('./Data/mushroom.csv', header = F)
+head(mr)
+```
+
+```{r}
+for (i in 1:23){
+  mr[,i] <- as.factor(mr[,i])
+}
+head(mr)
+```
+
+```{r}
+for (i in 2:23){
+  mr[,i] <- as.numeric(mr[,i])
+}
+head(mr)
+```
+
+## One - Hot Encoding
+
+각 컬럼별 Data 확인
+
+```{r}
+for(i in 2:23){
+  cat("column name : ", colnames(mr)[i])
+  print(table(mr[,i]))
+  cat("--------------------\n")
+}
+```
+
+### 작업 수행 후의 컬럼 갯수 파악
+
+```{r}
+num <- c()
+for (i in 2:23){
+  num <- append(num, length(unique(mr[,i])))
+}
+sum(num)
+# 만들어야 할  column이 117개 구나 
+```
+
+### 별도의 DataFrame 생성
+
+```{r}
+mr2 <- data.frame(V1=mr$V1)
+head(mr2)
+```
+
+```{r}
+sort(unique(mr$V2))
+```
+
+```{r}
+for(i in 2:23){
+  for(j in sort(unique(mr[,i]))){
+    mr2 = cbind(mr2,mr[,i] == j)
+  }
+}
+mr2 
+```
+
+```{r}
+ncol(mr2) # v1의 1개 + 117 개 
+```
+
+```{r}
+#str(mr2)
+```
+
+```{r}
+library(dplyr)
+
+```
+
+```{r}
+mr2 <- arrange(mr2, V1)
+head(mr2)
+```
+
+> 정렬을 하려고 하면 컬럼 이름때문에 Error가 발생
+
+```{r}
+colnames(mr2)<- paste("V",1:118,sep="")
+head(mr2)
+```
+
+```{r}
+mr2 <- arrange(mr2, V1)
+head(mr2)
+
+```
+
+# mr3 한번에 하기 
+
+```{r}
+mr3 <- data.frame(V1 = mr$V1)
+head(mr3)
+```
+
+```{r}
+count = 2
+for(i in 2:23){
+  for(j in sort(unique(mr[,i]))){
+    mr3 = cbind(mr3, mr[,i] ==j )
+    colnames(mr3)[count] <- paste("V",i,"_",j, sep="")
+    count = count +1
+  }
+}
+head(mr3)
+
+```
+
+```{r}
+mr3 <- arrange(mr3,V1)
+head(mr3)
+```
+
+## 인공신경망, rf, svm 으로 해보기 
+
+32-2
+
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\

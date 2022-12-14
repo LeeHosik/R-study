@@ -1,0 +1,18 @@
+## 학습내용 불러와서 예측해보기
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+rf <- readRDS('./AI/randomForest_iris.rds')
+```
+
+```{r}
+predict(rf, list(Sepal.Length=5.4, Sepal.Width=3.9,
+                 Petal.Length=1.7, Petal.Width=0.5
+                   )
+        )
+```
+
+## 이 3개?2개? chunk가 R server에 들어가고 jsp가 R server에 물어봄 

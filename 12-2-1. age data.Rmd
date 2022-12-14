@@ -1,0 +1,134 @@
+### 데이터 불러오고 대충 확인
+
+```{r}
+head(read.csv('./Data/200812_200912_year.csv', fileEncoding = "euc-kr", header = T))
+y0809 <- read.csv('./Data/200812_200912_year.csv', fileEncoding = "euc-kr", header = T)
+```
+
+```{r}
+head(read.csv('./Data/201012_201512_year.csv', fileEncoding = "euc-kr"))
+y1215 <- read.csv('./Data/201012_201512_year.csv', fileEncoding = "euc-kr")
+```
+
+```{r}
+head(read.csv('./Data/201612_202112_year.csv', fileEncoding = "euc-kr"))
+y1621 <- read.csv('./Data/201612_202112_year.csv', fileEncoding = "euc-kr")
+```
+
+```{r}
+rbind(y0809,y1215)
+
+head(y0809)
+```
+
+```{r}
+str(y1215)
+```
+
+# 시작
+
+# 전처리부터 시작하고 나서 싹다 합치기
+
+```{r}
+#str
+library(stringr)
+# arrange
+library(dplyr)
+# 3D chart
+library(plotrix)
+```
+
+### 행정구역 한글로 바꾸기
+
+```{r}
+# 임마부터 시작 
+y0809 <- read.csv('./Data/200812_200912_year.csv', fileEncoding = "euc-kr", header = T)
+
+y0809$행정구역
+#행정구역 한글만 남기기 
+
+y0809$행정구역<-unlist(str_extract_all(y0809$행정구역,"[가-횧]{1,}")) # 행정구역 바꾸기
+length(unlist(str_extract_all(y0809$행정구역,"[가-횧]{1,}"))) # 행정구역 17개 확인
+y0809[1:17,1:5]
+```
+
+```{r}
+y0809[11:17,1:5]
+```
+
+## 데이터 프레임 생성 / 서울,경기도,인천 = 수도권으로 합치기 / 나머지 합치기 / 전국열 , 합계열, 계 등 불필요한 행열 없애기
+
+```{r}
+y0809[-1,-c(2:16)] 
+# 전국열 , 합계열없애기
+y0809 <- y0809[-1,-c(2:16)] 
+#서울특별시, 인천광역시, 경기도를 수도권으로 이름을 바꾸기
+y0809[c(1,4,8),1] <- "수도권"
+y0809[-c(1,4,8),1] <-"비수도권"
+y0809
+```
+
+## 수도권과 수도권 외 합치려면 숫자에 , 없애고 numeric해야댐
+
+```{r}
+for(i in 1:ncol(y0809)){
+  y0809[,i] <- str_remove_all(y0809[,i],',') 
+}
+#로우 16 컬럼 62
+head(y0809)
+for(i in 2:ncol(y0809)-1){
+  y0809[,i+1] <- as.numeric(y0809[,i+1])
+}
+head(y0809)
+str(y0809)
+```
+
+## y0809 합치기 !!!! aggregate로 column 한번에 cbind로 못묶는다함
+
+```{r}
+subset(y0809,행정구역=="수도권")
+subset(y0809,행정구역!="수도권")
+
+y_test <- y0809
+length(y_test) # = 64
+
+
+y_test[,1]
+aggregate(y_test[,62] ~ 행정구역,y_test,sum )[,1:2]
+
+
+;
+for(i in c(2:length(y_test))){
+  aggregate(y_test[,i] ~ 행정구역,y_test,sum )
+  print(i)
+}
+
+
+temp <- c()
+for(i in seq(1,62,2)){
+  temp <- rbind(temp,t(age[i:(i+1), 1:ncol(age)]))
+}
+head(temp)
+age[1:2,]
+nrow(age)
+```
+
+```{r}
+head(y0809)
+```
+
+## 사용할 데이터 프레임 생성
+
+```{r}
+년도 <-rep(2008:2021, each = 2)
+#지역 <-rep(c("수도권","수도권 외"),28)
+
+age <- data.frame(년도)
+age
+```
+
+### 행별로 합치기
+
+-   서울특별시 + 인천광역시 + 경기도
+
+-   그 외 나머지

@@ -1,0 +1,151 @@
+# 주성분 분석
+
+서로 연관되어 있는 변수들이 관측 되었을때, 이 변수들이 전체적으로 가지고 있느 정보를 최대한 확보하는 적은 수의 변수를 생성하는 방법
+
+### 설문지를 이용한 주성분 분석
+
+-   이 데이터는 파스타 집에서 식사 후 파스타 평가 점수. 5점만점
+
+```{r}
+data <- read.table("./Data/pasta.txt")
+head(data)
+
+tail(data)
+```
+
+```{r}
+str(data)
+```
+
+```{r}
+table(data)
+```
+
+주성분 분석에서는 상관도가 높은게 안좋음
+
+### 다중 공선성 확인 : 너무 상관이 높아서 마치 쌍ㄷ궁이 데이터 인것 찾기
+
+```{r}
+cor(data)
+```
+
+```{r}
+summary(data)
+```
+
+표준화 : 평균을 0으로, 표준편차는 1로 변경
+
+```{r}
+data1 <- scale(data) # << 
+data1
+summary(data1)
+```
+
+```{r}
+#뭘로 보면 확인이 쉬울까?
+
+apply(data1,2,sd)
+```
+
+## prcomp
+
+```{r}
+p1 <- prcomp(data, scale = T)
+biplot(p1)
+```
+
+## Quiz
+
+```{r}
+ramen <- read.table('./Data/라면.txt', header = T)
+ramen
+```
+
+```{r}
+str(ramen)
+```
+
+```{r}
+rownames(ramen) <- c("신라면","짜파게티","쌀사리곰탕면", "무파마", "안성탕면","오징어짬뽕" ,  "너구리","육계장" )
+ramen <-ramen[,-1]
+ramen
+
+bi_ramen<- scale(ramen)
+bi_ramen <- prcomp(bi_ramen,scale = T)
+bi_ramen
+```
+
+```{r}
+par(family="AppleGothic")
+biplot(bi_ramen)
+```
+
+## USArrests
+
+이 데이터 세트에는 1973년 미국 50개주에서 각각 10만명당 폭행, 살인, 강간으로 체포된 통계
+
+도시지역에 살고 있는 인구 비율도 있음.
+
+```{r}
+head(USArrests)
+# 살인,폭행,인구밀도,강간 
+```
+
+밀도에 따른 살인,폭행,강간이 관계가 있을까?
+
+```{r}
+cor(USArrests)
+```
+
+### 주성분 분석
+
+## princomp
+
+```{r}
+result <- princomp(USArrests, cor =T)
+summary(result)
+```
+
+chart 한번 보고싶은데?
+
+```{r}
+biplot(result)
+```
+
+    근데 comp가 뭐야?
+    Comp.1    Comp.2    Comp.3     Comp.4
+    0.6200604 0.8675017 0.9566425 1.00000000  << 일치도 
+
+```{r}
+result$loadings
+```
+
+1주성분으로 새로운 변수값을 생성
+
+```{r}
+score <- 0.536 * USArrests$Murder   + 0.583 * USArrests$Assault+ 0.278 * USArrests$UrbanPop + 0.543 * USArrests$Rape
+score  # 이게 1주성분 점수 
+```
+
+states와 주성분으로 데이터 프레임
+
+```{r}
+Result <- data.frame(States = rownames(USArrests), Score = score)
+head(Result)
+
+#대표값 생성 
+```
+
+우선순위
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+head(arrange(Result, desc(Score)), 15)
+```
+
+```{r}
+head(arrange(Result, Score), 15)
+```

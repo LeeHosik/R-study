@@ -1,0 +1,160 @@
+# 1880년 부터 2014년 까지의 미국의 아기이름을 정리해논 데이터셋
+
+```{r}
+
+#str
+library(stringr)
+# arrange
+library(dplyr)
+# 3D chart
+library(plotrix)
+```
+
+```{r}
+baby <- read.csv("./Data/R_Baby_Names_1880-2014.csv")
+head(baby)
+tail(baby)
+str(baby)
+sum(is.na(baby))
+```
+
+### baby의 Year부분 정리하기 ㅜ
+
+```{r}
+baby$Year<-substring(baby$Year,7,10)
+head(baby)
+```
+
+저장해서 file 크기 비교해보기
+
+```{r}
+#write.csv(baby,"./Data/american_baby.csv", row.names = F)
+```
+
+### baby에서 여자 아이만 Female 이라는 dataset을 만들고 row수 구하기
+
+```{r}
+baby_f <- subset(baby,baby$Gender=='F')
+head(baby_f)
+tail(baby_f)
+#str_replace_all(baby_f, baby_f$Gender, 'Femail')
+```
+
+### 여자 아이 이름 가지수?
+
+```{r}
+length(unique(baby_f$Name))
+```
+
+### 여자 아이 이름중 가장 많이 사용된 이름과 count수 구하기
+
+```{r}
+head(baby_f)
+
+head(arrange(aggregate(Count ~ Name,baby_f,sum),desc(Count)))
+```
+
+## 그래프....
+
+인구분포
+
+년도별 인구수 합계 , 남녀 따로
+
+```{r}
+baby_f <- subset(baby,baby$Gender=='F')
+baby_f
+baby_m <- subset(baby,baby$Gender=='M')
+# 년도별 아이수 합친거 
+Count_f <- aggregate(Count ~ Year ,baby_f , sum)
+Count_f
+Count_m <- aggregate(Count ~ Year ,baby_m , sum)
+Count_m[,2]
+Count_f$m_Count <- Count_m 
+
+# 년도별 남녀 나누기 
+head(Count_f)
+head(Count_m)
+```
+
+```{r}
+par(family="AppleGothic")
+plot(
+  Count_f,
+  type = "l",
+  col = "orange",
+  #ylim = c(0, 400),
+  #$axes = F, # frame 없애기 
+  ann = F,  # 왼쪽 abc랑 밑에 index 없애기 
+  )
+lines(
+  as.matrix(Male),
+  type="l",
+  pch=22,
+  col="blue",
+  )
+# 
+# axis(  # 새로 만들기
+#   1, #x축에 대해서 만들거야
+#   at = 1:5,
+#   lab = c("서울","대전","제주","광주","세종"),
+#   cex.axis=0.5
+# )
+# axis(
+#   2, #y축 만들기 
+#   ylim = c(0,400)
+#   
+#   
+# )
+title(# 이렇게 따로 빼면 다른 옵션도 줄 수 있음
+  main = "1880 - 2014년 인구분포 현황",
+  )
+title(
+  xlab = "Year",
+)
+title(
+  ylab = "Count",
+  
+  )
+
+legend( # 범례 x,y축의 값에 따라 위치를 잡음
+  #범례는 그래프 침범하지 않도록 꼭꼮꼬꼬꼬꼬꼬꼬꼬꼮꼬꼬꼮꼬 ******8 중요함 가리지 말것
+   1990,700000,
+   c("Femail","Male"),
+   col = c('orange', 'blue'),
+   pch = c(15,15),
+   cex = 0.8,
+     )
+```
+
+## 강사님 답안
+
+```{r}
+Female <- aggregate(Count ~ Year, baby_f, sum)
+head(Female)
+```
+
+```{r}
+Male <- aggregate(Count ~ Year, baby_m, sum)
+head(Male)
+```
+
+```{r}
+par(family="AppleGothic")
+plot(
+  Female,
+  type='l',
+  main = "1880 - 2014년 인구분포 현황",
+  col = "orange",
+  ylim= c(0,2500000),
+)
+
+lines(
+  # or as.matrix(Male),
+  Male$Year,Male$Count,
+  col="blue"
+)
+
+
+
+
+```

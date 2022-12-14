@@ -1,0 +1,497 @@
+# 파일 입출력
+
+```{r}
+no <- 1:5
+name <- c("Apple","Banana","Peach","Pineapple","Beery")
+price <- c(500,200,300,400,400)
+qty <- c(20,43,36,26,63)
+```
+
+```{r}
+fruit <- data.frame(번호=no, 제품명=name, 가격=price, 수량= qty)
+fruit
+ls(fruit)
+```
+
+## scv로 저장하기
+
+```{r}
+write.csv(fruit,"./Data/fruit.csv", row.names = F)
+```
+
+```{r}
+read.csv("./Data/fruit.csv" )
+```
+
+밑에꺼 이미지임 row.names = F) 가 없으면 불러올때 아래처럼 불러와짐
+
+![](images/Screenshot%202022-11-29%20at%2012.36.03%20PM.png)
+
+# 세계 GDP순위 데이터 정제 및 차트 만들기
+
+```{r}
+GDP_ranking <-read.csv("./Data/GDP.csv")
+GDP_ranking
+```
+
+x.3 의 숫자에서 , 없애기, x.1의 NA가 전부 다 인지 확인하고 없으면 x.1 없애버리기
+
+```{r}
+head(GDP_ranking)
+tail(GDP_ranking)
+str(GDP_ranking)
+summary(GDP_ranking)
+
+```
+
+```{r}
+sum(!is.na(GDP_ranking$X.1))
+sum(!is.na(GDP_ranking$X.4))
+# GDP_ranking$X.1) 은 전부 다 NA 업새도 댐 
+```
+
+불필요한 컬럼 지우기
+
+```{r}
+GDP_ranking2 <-GDP_ranking[-c(1:4),c(1,2,4,5)]
+head(GDP_ranking2)
+```
+
+```{r}
+GDP_ranking$X.3
+str_extract_all(GDP_ranking$X.3,"[0-9]{1,}")
+GDP_ranking$X.3
+```
+
+상위 15개국만 선별한다.
+
+```{r}
+head(GDP_ranking2,15)
+GDP_ranking15 <- head(GDP_ranking2,15)
+GDP_ranking15
+```
+
+컬럼 이름 정의
+
+```{r}
+colnames(GDP_ranking15) <- c("Code","Ranking","Nation","GDP")
+GDP_ranking15
+```
+
+rownames 새로 구성하기
+
+```{r}
+rownames(GDP_ranking15) <- c()
+tail(GDP_ranking15)
+```
+
+column과 row가 어느정도 됬으니 이제 data 시작
+
+```{r}
+str(GDP_ranking15)
+```
+
+GDP를 숫자로 변경해야 Chart를 생성한다
+
+```{r}
+# 강사님 답안
+# GDP_ranking15$GDP<- as.numeric(str_remove_all(GDP_ranking15$GDP,","))
+
+GDP_ranking15$GDP<- as.numeric(str_replace_all(GDP_ranking15$GDP,",",""))
+GDP_ranking15
+
+```
+
+## 막대그래프 그리기
+
+```{r}
+par(family="AppleGothic") # 폰트지정 
+barplot(
+  GDP_ranking15$GDP, # GDP상위 15개국 Data
+  col = rainbow(nrow(GDP_ranking15)),
+  #col = "red"
+  main = "2018년 GDP 세계 15위 국가",
+  xlab = "국가(nation)",
+  ylab = "단위(dollors,$)",
+  names = GDP_ranking15$Code,
+  cex.names = 0.7
+)
+```
+
+차트는 보여주겠다는 주제가 있어야함
+
+미국과 중국, 한국만 빨간색으로 표시하고 나머지 국가는 검정색으로 표시하기
+
+```{r}
+par(family="AppleGothic")
+barplot(
+  GDP_ranking15$GDP, # GDP상위 15개국 Data
+  #col = c("blue","red","green"), # 1,2,12
+  col = 
+   # ifelse(GDP_ranking15$Ranking==c(1,2,12),"blue","red"),
+    ifelse(GDP_ranking15$Code==c("USA","CHN","KOR"),"red","black"),
+  
+  main = "2018년 GDP 세계 15위 국가",
+  xlab = "국가(nation)",
+  ylab = "단위(dollors,$)",
+  names = GDP_ranking15$Code,
+  cex.names = 0.7
+)
+```
+
+달러 단위를 천단위로 표시하기
+
+```{r}
+par(family="AppleGothic")
+barplot(
+  GDP_ranking15$GDP/1000, # GDP상위 15개국 Data
+  #col = c("blue","red","green"), # 1,2,12
+  col = 
+   # ifelse(GDP_ranking15$Ranking==c(1,2,12),"blue","red"),
+    ifelse(GDP_ranking15$Code==c("USA","CHN","KOR"),"red","black"),
+  
+  main = "2018년 GDP 세계 15위 국가",
+  xlab = "국가(nation)",
+  ylab = "단위(1K dollors,$)",
+  names = GDP_ranking15$Code,
+  cex.names = 0.7,
+  
+)
+```
+
+천단위 달러가 3000이상인 국가만 빨간색으로 표시하고, 나머지는 파란색으로 표시하기
+
+```{r}
+par(family="AppleGothic")
+barplot(
+  GDP_ranking15$GDP/1000, # GDP상위 15개국 Data
+  #col = c("blue","red","green"), # 1,2,12
+  col = 
+   # ifelse(GDP_ranking15$Ranking==c(1,2,12),"blue","red"),
+   # ifelse(GDP_ranking15$Code==c("USA","CHN","KOR"),"red","black"),
+    ifelse(
+      GDP_ranking15$GDP/1000 >= 3000,"red","blue"
+      ),
+  
+  main = "2018년 GDP 세계 15위 국가",
+  xlab = "국가(nation)",
+  ylab = "단위(1K dollors,$)",
+  names = GDP_ranking15$Code,
+  cex.names = 0.7,
+  
+)
+```
+
+# 데이터 처리
+
+```{r}
+install.packages('dplyr') # package 설치 커맨드
+library(dplyr)
+```
+
+Sepal.Length 기준으로 오름차순 정렬하기
+
+```{r}
+
+head(arrange(iris,iris$Sepal.Length)) # 오름차순 
+tail(arrange(iris,iris$Sepal.Length)) 
+
+```
+
+\
+Sepal.Length 기준으로 오름차순 정렬 후 1열과 2열만 보기
+
+```{r}
+head(arrange(iris[,1:2],iris$Sepal.Length))
+```
+
+```{r}
+#SepalLength 가 같을 경우의 다음 우선순위로 PetalLength 정렬을 시킴
+head(arrange(iris,Sepal.Length, Petal.Length)) 
+```
+
+```{r}
+#내림차순
+head(arrange(iris,desc(Sepal.Length)))
+head(arrange(iris,-(Sepal.Length)))
+```
+
+```{r}
+#데이터가 많아서 70% 정도만 가지고 작업을 하고 싶다 
+
+#sample(1:10,10)
+#→ 1~10 사이의 값중 10개 생성. 숫자를 랜덤하게 섞을때 사용할 수 있음
+
+irisSamp <- iris[sample(1:nrow(iris),nrow(iris)*0.7) , ]
+          #iris [로우의 70%만 보고싶다    , 컬럼은 전부 다       ]
+irisSamp
+head(irisSamp)
+```
+
+```{r}
+summary(irisSamp) # 중앙값과 중간값으로 하면 안됨
+table(irisSamp$Species)
+# IRIS의 특징은 iris$Species가 3개인것이 특징임. sample로 나온 데이터가 3종류가 같게끔 나와야댐
+
+#이러면 망함. 
+```
+
+iris의 3종유의 데이터를 똑같이 35개씩 뽑아다가 샘플로 집어넣음
+
+```{r}
+samp <-c( sample(1:50,35), sample(51:100,35), sample(101:150,35) )
+irisSamp <- iris[samp,]
+table(irisSamp$Species)
+```
+
+Train Data
+
+```{r}
+#Train Data
+iris.train <- iris[samp,]
+
+#Test Data
+iris.test <- iris[-samp,] # train에 넣은 나머지를 test에 넣었음 
+```
+
+```{r}
+summary(iris.train)
+```
+
+위 아래, 트레인과 테스트와 미디안값이 똑같을 순 없지만 비슷해야댐 , 난수로 들어가는거라 차이가 난다면 다시 한번 섞어주셈
+
+```{r}
+summary(iris.test)
+```
+
+```{r}
+set.seed(1234) # 테스트 할때 똑같은 난수결과값을 얻기 위해 사용하는거 
+              # 실제에서는 사용 안함, 교육/팀 체크용으로만 사용하는거임 
+samp <-c( sample(1:50,35), sample(51:100,35), sample(101:150,35) )
+samp
+```
+
+```{r}
+#부분집합 subset
+iris_setosa <- subset(iris, Species=='setosa')
+iris_setosa
+```
+
+```{r}
+str(iris_setosa)
+```
+
+Factor 에 setosa 만 있어야 되는데 뭔가가 있다. 이럴땐 차트가 원하는대로 나오지 않음
+
+```{r}
+#Factor 조정하기 
+iris_setosa$Species <- factor(iris_setosa$Species)
+str(iris_setosa)
+iris_setosa
+```
+
+iris에서 Species가 versicolor인것만 추출하여 iris_versicolor라는 데이터프레임을 만들고 조정하기
+
+```{r}
+iris_versicolor <- subset(iris, Species=='versicolor')
+str(iris_versicolor)
+factor(iris_versicolor$Species)
+iris_versicolor$Species <- factor(iris_versicolor$Species)
+str(iris_versicolor)
+iris_versicolor
+rownames(iris_versicolor) <- c(1:nrow(iris_versicolor))
+
+iris_versicolor
+```
+
+\
+iris에서 Species가 setosa 이고 Sepal.Length가 5보다 큰 자료만 추출하여 정제하기
+
+```{r}
+#iris_setosa <- 
+subset(iris_setosa, iris_setosa$Sepal.Length>5)
+str(subset(iris_setosa, iris_setosa$Sepal.Length>5))
+arrange(subset(iris_setosa, iris_setosa$Sepal.Length>5),desc(Sepal.Length))
+
+#rownames 는 아직 
+rownames()
+rownames(iris_versicolor) <- c(1:nrow(iris_versicolor))
+```
+
+```{r}
+subset(iris, select = -Species)
+#iris의 Species를 빼고 보겠다 
+```
+
+# 그룹 연산 함수
+
+iris의 품종별로 Sepal.Width의 평균 구하기
+
+```{r}
+aggregate(Sepal.Width ~ Species, iris, mean)
+```
+
+## 서울 교통사고 조사 데이터셋
+
+```{r}
+seoul2019 <- read.csv("./Data/newSeoul2019.csv")
+head(seoul2019)
+tail(seoul2019)
+str(seoul2019)
+summary(seoul2019)
+```
+
+### NA 확인
+
+```{r}
+sum(is.na(seoul2019))
+```
+
+```{r}
+#만약 NA가 있다면 어느 column의 na 인지 확인
+
+#j = row false 가 발견시 해당 반복된 횟수 카운트
+#i = column false 발견시 해당 반복된 횟수 카운트
+#c() 로 합친 뒤 어떤 column의 몇번째 row인지 나오게 하기 
+for(i in 1:ncol(seoul2019)){
+    cat("컬럼명",colnames(seoul2019[i]),"\tNA건수 : ",sum(is.na(seoul2019[,i])),"\n")
+}
+```
+
+컬럼별 Data 확인
+
+각 데이터가 어디는 많고 어디는 적은지, 균일하게 잘 들어가 있는지 확인
+
+```{r}
+table(seoul2019$년도)
+```
+
+년 별은 잘 되어있으니 월별로도 잘 들어가 있는지 확인
+
+```{r}
+table(seoul2019$월)
+```
+
+그 다음은 자치구명
+
+```{r}
+table(seoul2019$자치구명)
+
+#서울의 자치구명이 몇개인가 
+length(unique(seoul2019$자치구명))
+```
+
+### 자치구별 발생건수 평균
+
+\~\~\~별 이 들어가면 group by 가 들어가야되는구나\~ aggregate
+
+```{r}
+aggregate(seoul2019$발생건수 ~ seoul2019$자치구명, seoul2019, mean)
+regionAcc.mean <- aggregate(seoul2019$발생건수 ~ seoul2019$자치구명, seoul2019, mean)
+head(regionAcc.mean)
+
+
+```
+
+```{r}
+tail(arrange(regionAcc.mean, desc( regionAcc.mean$`seoul2019$발생건수`)))
+```
+
+자치구별 표준 편차
+
+```{r}
+regionAcc.sd <- aggregate(발생건수 ~ 자치구명, seoul2019, sd)
+regionAcc.sd
+```
+
+순위 같은거 구할라면 변동계수 라는걸 알아야 함
+
+변동계수 = 표준편차 / 평균
+
+변동게수가 적을수록 빈도수가 높다
+
+```{r}
+regionAcc.cv <- regionAcc.sd$발생건수/regionAcc.mean$`seoul2019$발생건수`
+regionAcc.cv # vector 값이니 데이터프레임으로 바꿔서 보기 편하게 하자
+```
+
+```{r}
+regionAcc <- data.frame(자치구명=regionAcc.mean, 변동계수 = regionAcc.cv)
+
+arrange(regionAcc, regionAcc$변동계수)
+arrange(regionAcc, desc(regionAcc$변동계수))
+```
+
+# 서울시 교통사고 부상자수에 대한 변동계수 구하기
+
+```{r}
+
+regionInjure.mean <- aggregate(부상자수 ~ 자치구명, seoul2019, mean)
+regionInjure.mean
+regionInjure.sd <- aggregate(부상자수 ~ 자치구명, seoul2019, sd)
+regionInjure.sd
+regionInjure.cv <- regionInjure.sd$부상자수/regionInjure.mean$부상자수
+regionInjure.cv
+regionInjure <- data.frame(부상자수 = regionInjure.mean, 변동계수 = regionInjure.cv)
+regionInjure
+
+arrange(regionAcc,regionInjure$변동계수)
+```
+
+# 서울시 교통사고 사망자수에 대한 변동계수 구하기
+
+```{r}
+
+regionDeath.mean <- aggregate(사망자수 ~ 자치구명, seoul2019, mean)
+regionDeath.sd <- aggregate(사망자수 ~ 자치구명, seoul2019, sd)
+regionDeath.cv <- regionDeath.sd$사망자수/regionDeath.mean$사망자수
+regionDeath.cv 
+regionDeath <- data.frame(사망자수 = regionDeath.mean, 변동계수 = regionDeath.cv)
+regionDeath
+arrange(regionDeath,regionDeath$변동계수)
+
+```
+
+# 상관계수
+
+```{r}
+cor(seoul2019$발생건수,seoul2019$부상자수) 
+# 98% 관련이 있다. 사고가 발생했으면 98% 부상자가 난다 
+```
+
+\~ 0.3 : 상관없음
+
+0.3 \~ 0.5 : 약한 관계
+
+0.5 \~ 0.7 : 관계 있음
+
+0.7 \~ : 강한 관계
+
+```{r}
+#그렇다면 사망은 ?
+cor(seoul2019$발생건수,seoul2019$사망자수) # = 0.2387148
+# 사망과는 그다지 상관없다 라고 말할 수 있다고 하심 
+```
+
+```{r}
+cor(seoul2019$부상자수,seoul2019$사망자수) #= 0.2373019
+# 부상당한 사람과 사망자수의 관계는 관계가 없다
+# 선진국의 요건중 하나, 부상이 생겼을때 병원에서 잘 치료 받았다 ?
+# 아닌가? 여기서 사망자는 현장사망만 얘기하는거 같은데 
+```
+
+```{r}
+par(family="AppleGothic")
+plot(seoul2019$발생건수, seoul2019$부상자수)
+```
+
+```{r}
+par(family="AppleGothic")
+plot(seoul2019$발생건수, seoul2019$사망자수)
+
+# 분석 불가 = 상관도가 떨어짐. 관련이 없다
+#cor(seoul2019$발생건수,seoul2019$사망자수) = 0.2387148
+
+
+# 허나, 지금은 공신력은 떨어지나 분석은 가능하다고는 하심 
+```

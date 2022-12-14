@@ -1,0 +1,251 @@
+```{r}
+#str
+library(stringr)
+# arrange
+library(dplyr)
+```
+
+```{r}
+iq <- read.csv("./Data/IQ.csv")
+iq
+```
+
+```{r}
+str(iq)
+```
+
+## (1) iq가 126인 사람의 성적을 예측해 보세요
+
+```{r}
+iq$IQ 
+iq$성적
+```
+
+```{r}
+
+plot(iq$성적  ~ iq$IQ)
+#회귀식 : lm(종속변수(y) ~ 독립변수(x))  x에 의해서 y값이 변하는.
+lm(iq$성적  ~ iq$IQ)
+
+# 회귀선(중심선, 평균선 )
+iqr <- lm(iq$성적  ~ iq$IQ)
+abline(iqr, col="red")
+```
+
+```{r}
+summary(iqr)
+```
+
+    p-value: 0.0002547
+    Adjusted R-squared:  0.8071 
+    Residual standard error: 3.322
+
+```{r}
+iqr
+```
+
+```{r}
+# iq = 126
+
+paste(round(0.6714 * 126 + -(5.2918) -3.322 ,2)  , "~", round(0.6714 * 126 + -(5.2918) +3.322),2)
+
+
+# (Intercept) 없애기 
+paste(round(0.6714 * 126 -3.322 ,2)  , "~", round(0.6714 * 126 +3.322),2)
+
+
+```
+
+## (2) 성적과 가장 관련이 깊은 항목은 무엇인가?
+
+```{r}
+iq
+```
+
+```{r}
+plot(iq$성적  ~ iq$게임하는.시간)
+plot(iq$성적  ~ iq$TV시청.시간)
+plot(iq$성적  ~ iq$다니는.학원수)
+
+cor(iq$성적,iq$게임하는.시간) #  -0.3383549
+cor(iq$성적,iq$TV시청.시간) #  -0.8473333
+cor(iq$성적,iq$다니는.학원수) #  0.7840514
+cor(iq$성적,iq$IQ) #  0.9102242
+
+```
+
+```{r}
+a <- cor(iq[,-1])
+a
+```
+
+## (3) 학원을 몇군데 다녀야 90점이 될까 ?
+
+```{r}
+# plot(iq$성적  ~ iq$다니는.학원수)
+# #회귀식 : lm(종속변수(y) ~ 독립변수(x))  x에 의해서 y값이 변하는.. << 성적이 알고 싶다 
+# lm(iq$성적  ~ iq$다니는.학원수)
+
+
+
+# 회귀선(중심선, 평균선 )
+# iqr <- lm(iq$성적  ~ iq$다니는.학원수)
+# abline(iqr, col="red")
+
+
+## ***** 학원을 알고싶다. 학원이 Y << 종속변수 
+
+
+plot(iq$다니는.학원수 ~ iq$성적)
+lm(iq$다니는.학원수 ~ iq$성적)
+
+iqr <- lm(iq$다니는.학원수 ~ iq$성적)
+abline(iqr, col="red")
+```
+
+```{r}
+iqr
+```
+
+```{r}
+summary(iqr)
+```
+
+    p-value: 0.007264
+    Adjusted R-squared:  0.5666 
+    Residual standard error: 0.7882
+
+```{r}
+ 0.1241 * x + 69.488 -7.89163 -(0.7882) = 90
+
+```
+
+# 다중 회귀 분석
+
+: 여러개의 항목들로 구성된 식으로 예측하는 방법
+
+```{r}
+data("attitude")
+help(attitude)
+```
+
+```{r}
+head(attitude)
+```
+
+```{r}
+str(attitude)
+```
+
+```{r}
+plot(attitude)
+```
+
+### rating을 제외한 변수들이 rating에 어떤 영향을 미치는지 회귀분석으로 분석
+
+```{r}
+# . 은 왼쪽꺼 컬럼 빼고 다 라는 뜻, 
+model <- lm(rating ~ ., data = attitude)
+model
+
+```
+
+```{r}
+summary(model)
+```
+
+    complaints 가 가장 관계 깊고 learning이 조금 상관이 있다.
+    cor로 다시 한번 확인해보고 
+
+    Adjusted R-squared:  0.6628 
+    예측력이 0.66? 상관없는 모든게 다 포함되서 낮음
+
+```{r}
+cor(attitude)
+```
+
+예측력을 향상 시켜보자
+
+```{r}
+# backward 제일 필요없는거부터 하나씩 없앨거다 
+reduced <- step(model, direction = "backward")
+```
+
+```{r}
+summary(reduced) 
+```
+
+    예측력이
+    Adjusted R-squared:  0.6628  에서 
+    Adjusted R-squared:  0.6864  으로 오름  
+
+```{r}
+reduced
+```
+
+> # Iris에 대한 다중 회귀분석
+
+```{r}
+summary(iris)
+```
+
+```{r}
+str(iris)
+```
+
+```{r}
+iris$Species
+
+
+iris$Species <- as.numeric(iris$Species)
+
+iris
+```
+
+```{r}
+plot(iris)
+```
+
+```{r}
+imodel <- lm(Species ~ . , data = iris)
+
+```
+
+```{r}
+summary(imodel)
+```
+
+    Adjusted R-squared:  0.8557 
+
+    Residual standard error: 0.3145
+
+```{r}
+
+ireduced <- step(imodel, direction = "backward")
+```
+
+```{r}
+ireduced
+```
+
+```{r}
+(3.5* -0.1362) + (1.4 * 0.2521) + (0.2*0.5869) + 1.1447   
+
+(6.7*-0.1362) + (5.7 * 0.2521) + (2.5*0.5869)+ 1.1447   
+```
+
+```{r}
+iris
+```
+
+```{r}
+irisFunc <- function(x,y,z){
+  y=(x*-0.1362 )+(y*0.2521)+(z*0.5869)+1.1447
+  return(y)
+}
+as.matrix(iris[1,c(2:4)])
+```
+
+```{r}
+irisFunc(2.7,3.9,1.6)
+```

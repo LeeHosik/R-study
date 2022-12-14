@@ -1,0 +1,158 @@
+# 서울시 주민등록인구(연령별/구별)통계
+
+### 0세부터 5살 간격으로 연령별로 되어 있는 자료
+
+```{r}
+seoul_age_gu <- read.csv('./seoul_age_gu.csv', header = T)
+
+# 서울시 주민등록인구(연령별/구별)통계
+# https://data.seoul.go.kr/dataList/10718/S/2/datasetView.do
+```
+
+```{r}
+#str
+library(stringr)
+# arrange
+library(dplyr)
+```
+
+### 불필요한 칼럼 정리
+
+```{r}
+# 초기 눈에 바로 보이는 불필요한 컬럼 로우 삭제 
+seoul_age_gu <- seoul_age_gu[-c(1:22),-c(2,4)]
+seoul_age_gu <- seoul_age_gu[-c(seq(10,100,10)),]
+
+
+seoul_age_gu
+
+```
+
+### colnames 정리
+
+```{r}
+colnames(seoul_age_gu) <- c("년도","연령별","종로구","중구","용산구","성동구","광진구","동대문구","중랑구","성북구","강북구","도봉구","노원구","은평구","서대문구","마포구","양천구","강서구","구로구", "금천구", "영등포구" ,"동작구","관악구","서초구","강남구","송파구","강동구")
+
+seoul_age_gu
+```
+
+### rownames 정리
+
+```{r}
+rownames(seoul_age_gu) <- c()
+seoul_age_gu
+```
+
+### as.numeric
+
+```{r}
+for(i in 3:ncol(seoul_age_gu)){
+  seoul_age_gu[,i] <- as.numeric(seoul_age_gu[,i])
+}
+seoul_age_gu$년도<-as.numeric(seoul_age_gu$년도)
+seoul_age_gu
+```
+
+### 60\~100- 으로 년도별로 합치기
+
+```{r}
+ 
+agre_seoul_age_gu <- aggregate(cbind(종로구,중구,용산구,성동구,광진구,동대문구,중랑구,성북구,강북구,도봉구,노원구,은평구,서대문구,마포구,양천구,강서구,구로구, 금천구, 영등포구 ,동작구,관악구,서초구,강남구,송파구,강동구) ~ 년도, seoul_age_gu, sum)
+ 
+ agre_seoul_age_gu
+```
+
+```{r}
+agre_seoul_age_gu
+str(agre_seoul_age_gu)
+
+agre_seoul_age_gu[1,-1]
+t(agre_seoul_age_gu[1,-1])
+
+```
+
+```{r}
+agre_seoul_age_gu[8,]
+```
+
+```{r}
+
+
+par(family="AppleGothic")
+options(scipen=999)
+ plot(
+ t(agre_seoul_age_gu[1,-1]),
+   type = 'o', 
+   col = 1, 
+   ylim = c(0,170000),
+   main = "2014 ~ 2021 년 서울시 자치구별 60대 이상 인구분포",
+  ylab = "인구수 ( 단위 : 명)",
+  xlab = "자치구명",
+  axes = F, # frame 없애기 
+  #ann = F,  # 왼쪽 abc랑 밑에 index 없애기 
+ 
+   )
+
+
+lines(
+ t(agre_seoul_age_gu[2,-1]),
+ type = 'o',
+ col = 2)
+
+lines(
+ t(agre_seoul_age_gu[3,-1]),
+ type = 'o',
+ col = 3)
+
+lines(
+ t(agre_seoul_age_gu[4,-1]),
+ type = 'o',
+ col = 4)
+
+lines(
+ t(agre_seoul_age_gu[5,-1]),
+ type = 'o',
+ col = 5)
+
+lines(
+ t(agre_seoul_age_gu[6,-1]),
+ type = 'o',
+ col =6 )
+
+lines(
+ t(agre_seoul_age_gu[7,-1]),
+ type = 'o',
+ col = 7)
+
+lines(
+ t(agre_seoul_age_gu[8,-1]),
+ type = 'o',
+ col = 8)
+
+legend(
+  #15,2400000,
+  "topleft",
+ #c(seq(2014,2021,1)),
+ #c('2014','2015','2016','2017','2018','2019','2020','2021'),
+ c('2021','2020','2019','2018','2017','2016','2015','2014'),
+  cex = 0.8, 
+  pch = 1, 
+  col = 8:1, 
+  lty = 1,
+)
+
+axis(  # 새로 만들기
+  1, #x축에 대해서 만들거야 
+  at = 1:25,
+  lab = c("종로구",'중구','용산구','성동구', '광진구', '동대문구', '중랑구' , 
+          '성북구','강북구' ,'도봉구', '노원구','은평구','서대문구','마포구' ,
+          '양천구', '강서구','구로구','금천구',  '영등포구' ,'동작구', '관악구' ,
+          '서초구' ,'강남구','송파구','강동구'),
+  cex.axis=0.28
+)
+
+ axis(
+2, #y축 만들기 
+  #ylim = c(0,400)
+)
+```

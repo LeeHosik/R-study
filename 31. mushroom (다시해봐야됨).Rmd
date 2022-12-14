@@ -1,0 +1,171 @@
+# mushroom
+
+```{r}
+# https://archive.ics.uci.edu/ml/datasets/Mushroom
+```
+
+```{r}
+library(dplyr)
+library(nnet)
+library(randomForest)
+library(caret)
+library(e1071)
+```
+
+```{r}
+mr <-read.csv('./Data/mushroom.csv', header = F)
+head(mr)
+```
+
+## RandomForest를 이용한 버섯분류
+
+```{r}
+str(mr)
+```
+
+mr \<- 8124종류의 버섯의 특징과 독의 유무를 정리해논 데이터셋
+
+V1 : 독의 유무 - 독(p), 식용(e)
+
+V2 : 버섯의 머리모양 - 벨형태(b), 원뿔(c), 볼록(x), 평평(f), 혹(k), 오목(s)
+
+V4 : 버섯의 머리색 -- 갈색(n), 황갈색(b), 연한갈색(c), 회색(g)
+
+자세한 내용은 사이트 참조
+
+머신러닝 사용을 위해서 숫자가 필요하고 chr를 일일이 숫자로 바꾸지 않기 위해선 factor로 변경 후 factor의 숫자를 획득,
+
+```{r}
+for ( i in 1:23){
+  mr[,i] = as.factor(mr[,i])
+}
+str(mr)
+```
+
+```{r}
+for ( i in 1:23){
+  mr[,i] = as.numeric(mr[,i])
+}
+head(mr)
+```
+
+V1 (독의유무) 기준으로 p,e를 정렬
+
+```{r}
+library(dplyr)
+mr <- arrange(mr, V1)
+head(mr)
+```
+
+```{r}
+tail(mr)
+```
+
+p와 e가 몇개씩 있는지 확인해보자
+
+```{r}
+head(mr)
+tail(mr)
+```
+
+### Sampling
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(mr$V1, p=0.7, list=F)
+data.train <- mr[samp,]
+data.test <- mr[-samp,]
+str(mr$V1)
+```
+
+```{r}
+  x <- subset ( data.test, select = -V1)
+  y <- data.test$V1
+  rf <- randomForest(V1 ~ ., data = data.train, ntree = 100) 
+  pred <- predict(rf, x)
+  mean(pred == y)
+```
+
+``` {)}
+```
+
+```{r}
+
+rfFun <- function(n){
+ for (i in 1:n){
+    if(i == 1){
+      resultVec = c()
+    }#if end
+    samp <- createDataPartition(mr$V1, p=0.7, list=F)
+    data.train <- mr[samp,]
+    data.test <- mr[-samp,]
+    x <- subset ( data.test, select = -V1)
+    y <- data.test$V1
+    rf <- randomForest(V1 ~ ., data = data.train, ntree = 100) 
+    pred <- predict(rf, x)
+    resultVec = append(resultVec, mean(pred == y))
+  }#for end
+  cat("---------------------------------------------\n")
+  cat("예측율 \n")
+  cat(resultVec,"\n")
+  cat("---------------------------------------------\n")
+  cat("평균예측율 : ",mean(resultVec),"\n")
+  cat("---------------------------------------------\n")
+}
+
+```
+
+```{r}
+rfFun(5)
+```
+
+### 인공신경망으로 예상하기
+
+```{r}
+library(nnet)
+```
+
+학습용 데이터와 검증용 데이터
+
+```{r}
+samp <- createDataPartition(mr$V1, p=0.7, list=F)
+data.train <- mr[samp,]
+data.test <- mr[-samp,]
+```
+
+모델 만들기
+
+```{r}
+model.nnet <- nnet(mr$V1 ~ ., data = data.train, size = 3 ) # size : 은닉층 갯수 
+```
+
+```{r}
+mr
+```
+
+문제 정답 만들기
+
+```{r}
+x <- subset(data.test , select = -V1)
+y <- data.test$V1
+```
+
+test
+
+```{r}
+pred <- predict(model.nnet, x, type = "class") # class : 객관식 / raw : 주관식 
+```
+
+예측력 확인
+
+```{r}
+pred == y
+mean(pred == y)*100
+```
+
+정오표 확인
+
+```{r}
+table(pred,y)
+```

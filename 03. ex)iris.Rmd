@@ -1,0 +1,645 @@
+# Subject?
+
+## Species 분류
+
+-   iris
+
+```{r}
+head(iris)
+```
+
+```{r}
+tail(iris)
+```
+
+```{r}
+plot(iris)
+```
+
+```{r}
+summary(iris)
+```
+
+```{r}
+str(iris)
+```
+
+```{r}
+plot(iris$Petal.Length)
+```
+
+# VECTOR
+
+c(),seq(),rep(), : 으로 vector 구성
+
+1차원이라 [] 에 , 를 사용할 수 없음.
+
+## factor
+
+R만 가지고 있는 ! character , numeric 동시에 사용가능한
+
+```{r}
+as.character(iris$Species)
+```
+
+```{r}
+as.numeric(iris$Species)
+```
+
+## Vector 계산
+
+```{r}
+x <- c(3,6,9,12,15)
+x + 1
+x + c(1,2,3,4,5) #4  8 12 16 20
+```
+
+### Vector 합치기
+
+```{r}
+x <- c(3,5,6,12,15)
+y <- 1:5
+z <- append(x,y) # 합쳐줌  # 4,7,9,16,20
+z
+```
+
+```{r}
+z <- x + y
+z # 계산이 됨 
+z <- c(x,y)
+z
+```
+
+```{r}
+x 
+x + c(1,2) # Warning: longer object length is not a multiple of shorter object length
+            # 값은 나오기는 하는데 길이가 맞지 않아서 3+1 / 5+2 / 6+1 / 12+2 / 15+1 로 나옴
+            # c(1,2)가 뺑뺑이 되서 더해짐, 이렇게 사용하지 말것. 
+```
+
+```{r}
+length(x) == length(c(1,2)) # 몇개 없으니 눈으로 확인하는데 셀수 없을땐 먼저 
+                            # 길이로 확인한 뒤에 더할것 
+```
+
+### iris의 Sepal.Lenght의 중복되지 않은 갯수의 Percent 구하기
+
+```{r}
+(length(unique(iris$Sepal.Length))/ length(iris$Sepal.Length) * 100)
+
+```
+
+# 문자열 관련함수
+
+```{r}
+x <- c("a","b","c","d","e","f","g","h")
+x[1:2] # "a","b"
+paste(x[1], x[2]) # 1번째와 2번째를 합쳐서 "a b"로 만듬 ,, + a b 사이 떨어져 있는건 나중에
+```
+
+```{r}
+paste("Hello","World!") #"Hello World!"
+```
+
+### iris의 1, 51, 101번의 Species만 한꺼번에 출력하기
+
+```{r}
+paste(iris$Species[1],iris$Species[51],iris$Species[101])
+iris$Species[c(seq(1,length(iris$Species),50))]
+paste(iris$Species[c(seq(1,length(iris$Species),50))])  
+
+
+
+
+
+
+
+# = "setosa"     "mergesicolor" "virginica"
+    # vector를 합칠때 사용 출력이아님
+    #seq(1,length(iris$Species),50)  = 1  51 101
+
+```
+
+```{r}
+print("aaa","vvv") # print는 1개밖에 출력 못함, 
+cat("aaa \t bbb \n ccc")  # 여러개 출력할때는 cat을 사용
+```
+
+### sep
+
+```{r}
+paste("010","1111","2222",sep = "") # = 01011112222
+paste("010","1111","2222",sep = '-') #= 010-1111-2222
+        # 강사님은 ""로 가르쳐주심 
+```
+
+### 문자열 추출하기
+
+```{r}
+str01 <- "abcdefghijklmnop" # bcde만가져오고싶다 
+substring(str01,2,5)
+str02 <- "가나다라마바사아자차카타파하" # ="나다라마"
+substring(str02,2,5)
+```
+
+### 데이터 유무 확인하기
+
+```{r}
+x <- runif(5,1,20)
+x
+
+xx <- runif(5,"가","횧") # 한글은 안되는듯?
+```
+
+```{r}
+# x가 4와 7 사이에 있는지를 확인하기 
+(x>=4) & (x<=7)
+# 몇개가 있냐 
+sum((x>=4) & (x<=7)) # = 1 
+
+```
+
+```{r}
+any(x>=10) # 어떤거 하나라도 
+all(x>=10) # 전부 다 만족하자 
+
+```
+
+# 행렬(Matrix)
+
+-   행렬 : 2차원의 자료를 저장하는 자료형
+
+-   행렬은 데이터의 형태가 모두 일치 되어야 구성
+
+    ```{r}
+    vec1 <- c(1,2,3)
+    vec2 <- c(4,5,6)
+    vec3 <- c(7,8,9)
+    ```
+
+    ```{r}
+    # rbind : row bind 
+
+    mat1 <- rbind(vec1, vec2, vec3)
+    mat1
+    ```
+
+    ```{r}
+    #cbind : column bind
+    mat2 <- cbind(vec1, vec2, vec3)
+    mat2
+    ```
+
+    ```{r}
+    # iris의 1~5번 데이터만 추출하기 
+    head(iris,5)
+    irisHead <- head(iris,5)
+    irisHead
+
+    # 추출한 데이터의 row에 1,1,1,1, setosa 추가하기 
+
+    irisHead<-rbind(irisHead,c(1,1,1,1,"setosa"))
+      irisHead
+      
+      
+    # 추출한 데이터에 abc라는 컬럼과 데이터 2,2,2,2,2,2 의 데이터 추가하기 (abc = )
+      irisHead
+      irisHead <- cbind(irisHead, abc=rep(2,8)) # << 강사님 답안 
+    irisHead <- cbind(irisHead,"abc"=2)
+    irisHead
+    ```
+
+    ```{r}
+    irisHead <- iris[1:5,]
+    # Length = Sepal.Lenght + Petal.Length 로 계산하여 Length컬럼 추가하기
+    irisHead
+    irisHead<- cbind(irisHead, length = irisHead$Sepal.Length+irisHead$Petal.Length)
+    irisHead$Length = irisHead$Sepal.Length + irisHead$Petal.Length # 여기서 바로 만드는방법
+    irisHead
+    ```
+
+    ```{r}
+    sl <- iris$Sepal.Length
+    sw <- iris$Sepal.Width
+    irisM <- cbind(sl, sw)
+    head(irisM)
+    class(irisM) # = "matrix" "array" 
+    irisD <- as.data.frame(irisM)
+    head(irisD)
+    class(irisD) # = class(irisD)
+    ```
+
+    ```{r}
+    mat1
+    class(mat1) # ="matrix" "array" 
+    colnames(mat1) <- c("A","B","C")
+    mat1
+    # vector 2개로 만들었으니 당연히 matrix
+    mat1D <- as.data.frame(mat1)
+    class(mat1D)
+    mat1D
+    ```
+
+    ```{r}
+    mat2
+    rownames(mat2) <- 1:3
+    mat2
+    mat2D <- as.data.frame(mat2)
+    mat2D
+    ```
+
+    ## DataSet 합치기
+
+    ```{r}
+    mat1<- rbind(mat1,mat2)
+    mat1
+    mat1<- as.data.frame(mat1)
+    mat1D
+    mat2D # 1D 2D의 컬럼 이름이 달라서 안합쳐짐
+    colnames(mat2D) <- colnames(mat1D)
+    mat12D <- rbind(mat1D,mat2D)
+    mat12D
+
+    mat2 <- cbind(mat1,mat2)
+    mat2
+    ```
+
+    ```{r}
+    colnames(mat2D) <- colnames(mat1D) # 이름 바꿔치기
+    colnames(mat1D)
+    colnames(mat2D)
+    ```
+
+    # DataFrame
+
+    : 다양한 자료형으로 구성된 2차원 형태의 데이터 구조
+
+    ```{r}
+    # Vector로 데이터프레임 만들기
+    no <- 1:4
+    name <- c("Apple","Banana","Peach","Berry")
+    price <- c(500,400,300,200)
+    qty <- c(5,2,7,4)
+    fruit <- data.frame(번호 = no , 상품명 = name, 금액 = price, 재고량 = qty)
+    fruit
+    ```
+
+    ```{r}
+    str(fruit)
+    ```
+
+    ```{r}
+    #fruit에서 상품명과 재고량만 보기
+
+    fruit[,c("상품명","재고량")]
+    fruit[,c(2,4)]
+
+    # fruit에서 번호를 제외한 모든 내용 보기
+    fruit
+    fruit[,-1]
+    fruit[,-(3:4)]
+
+    # fruit에서 2,4번 행을 제외한 상품명, 금액, 재고량만 출력 
+
+    fruit[-c(2,4),]
+    ```
+
+    ```{r}
+    no <- 1:4
+    name <- c("Apple","Banana","Peach","Berry")
+    price <- c(500,400,300,200)
+    qty <- c(5,2,7,9)
+    qtyprice <- c(price*qty)
+    fruit <- data.frame(번호 = no , 상품명 = name, 금액 = price, 재고량 = qty, 재고금액 = qtyprice)#
+    ########### 이렇게 하는거 아님 일케 하지 마셈 ###############
+    fruit
+
+    ## 내가 한거. cbind 도 안쓰는거임 
+    fruit <- cbind(fruit,재고금액 = fruit$금액*fruit$재고량)
+    fruit
+
+    ## 강사님 답안 
+    fruit$재고금액 = fruit$재고량*fruit$금액
+    fruit
+
+    ```
+
+    ```{r}
+    # fruit에 원산지 컬럼 생성하여 붙이기 ( 한국,태국,한국,중국)
+    from = c("한국","태국","한국","중국")
+    fruit <- data.frame(fruit, 원산지 = from)
+    fruit
+    # 답안지는 안가르쳐주심
+    ```
+
+# 외부 File 불러오기
+
+```{r}
+txtEmp <- read.table("./Data/emp.txt", header = T, sep="\t") #txt file 은 table로 
+txtEmp # sep은 뭔가 없애주는듯. 띄어쓰기는 알아서 1칸 없애주고 ,같은거 있음 sep으로 없애줌
+#파일 안에 tab 키는 = 101\thong\t150 일케 하나로 나옴 . 그때는 sep="\t" 로 없애야댐
+```
+
+```{r}
+str(txtEmp)
+```
+
+CSV comma sepe??? value
+
+한국에서는 txt를 더 많이 쓰게 될꺼라 하심.
+
+금액 1,000,000 \<\< String 으로 댐 scv로 오면은 컬럼이 3개가 되버림
+
+그래서 txt로 받고 sep=","로 지워야댐
+
+emp2.csv File 내용
+
+101,홍길동,150
+
+102,이순신,450
+
+103,강감찬,500
+
+104,유관순,350
+
+105,김유신,400
+
+```{r}
+csvEmp <- read.csv("./Data/emp2.csv", head=F)
+csvEmp
+colnames(csvEmp) <- c("사번","이름","급여")
+csvEmp
+str(csvEmp)
+```
+
+```{r}
+ncol(csvEmp)
+nrow(csvEmp)
+```
+
+```{r}
+df <- data.frame(x=1:5, y=seq(2,10,2), z=c("a","b","c","d","e"))
+df
+
+sum(df$x)
+sum(df$y)
+
+
+df <- data.frame(x=1:5, y=seq(2,10,2), z=c("a","b","c","d","e"))
+```
+
+# 함수를 부르는 함수
+
+```{r}
+apply(df[,1:2],2,sum) # 2 는 열방향(세로)
+apply(df[,1:2],2,mean)
+apply(df[,1:2],2,sd)
+df[,1:2]
+```
+
+```{r}
+apply(df[,1:2],1,sum) #1은 행방향(가로)
+apply(df[,1:2],1,mean)
+apply(df[,1:2],1,sd)
+```
+
+```{r}
+df$Hap = apply(df[,1:2],1,sum) #1은 행방향(가로)
+df
+```
+
+### 부분집합 select 필요한 부분만 빼온다
+
+```{r}
+subset(df, x>=3 & y >=8)
+nrow(subset(df, x>=3 & y >=8)) # 몇개인지 확인할때 이렇게 확인 
+```
+
+apply를 사용하여 x\>=3 이고 y\>=8 데이터의 x와 y의 합계를 각각 구하시오
+
+apply(df[,1:2],1,sum) #1은 행방향(가로)
+
+```{r}
+subset(df, x>=3 & y >=8)
+apply(subset(df, x>=3 & y >=8)[,1:2],2,sum)
+applyx3y8 <- subset(df, x>=3 & y >=8)
+apply(applyx3y8[,1:2],2,sum)
+
+```
+
+# 두개 이상의 데이터프레임 병합하기
+
+### case 1 : Key값이 되는 컬럼이 동일하고 data의 갯수도 동일한 경우
+
+```{r}
+height <- data.frame(id=1:3, height=c(160,170,180))
+weight <- data.frame(id=c(2,1,3), weight=c(70,60,80))
+height
+weight
+
+```
+
+```{r}
+merge(height, weight)
+```
+
+case 2 : Key 값이 되는 컬럼이 동일하지 않고 각각의 data 갯수도 다를 경우
+
+```{r}
+height <- data.frame(id=1:3,height=c(160,170,180))
+weight <- data.frame(ad=c(2,1), weight=c(70,60))
+height
+weight
+```
+
+```{r}
+merge(height,weight)  # 걍 해본거, 결과값은 역시 아님    #sql의 inner join 
+merge(x=height, y=weight, by.x = "id", by.y = "ad") # by.x 는 x의 key 인거임
+```
+
+```{r}
+merge(x=height, y=weight, by.x = "id", by.y = "ad", all.x = T) ## outter join
+```
+
+# List
+
+#R의서의 List 는 java 의 map
+
+```{r}
+member <- list(name="Hosik", address="Seoul", tel = "010-8756-7438", pay = 300)
+member
+```
+
+```{r}
+member$name
+member$address
+```
+
+# 문자열 처리
+
+수집한 데이터의 필요한 문자열을 자르고 교체하고 추출하는 작업
+
+## stringr package 사용
+
+-   str_length() : 문자열 길이를 알려주는 함수
+
+-   str_c() : 문자열 연결 시켜주는 함수
+
+-   str_sub() : 범위에 해당하는 문자열 생성
+
+-   str_split() : 구분자를 기준으로 문자열을 분리하여 부분 생성
+
+-   str_replace : 기존 문자열을 특정 문자열로 변환
+
+-   str_extract(), str_extract_all() : 문자열에서 특정 문자열 패턴의 첫번째(전부) 문자열 추출
+
+-   str_locate(), str_locate_all() : 문자열에서 특정 문자열 패턴의 첫번째 (전부) 위치 추출
+
+```{r}
+library(stringr)
+```
+
+```{r}
+string <- "hongkildong105yoube1002kwanwoo25ジャンGB位２００５호식7438"
+string
+```
+
+string 에서 a\~z까지의 영문자가 연속으로 3개 발견된 문자열 추출
+
+```{r}
+str_extract_all(string, "[a-z]{3}") ## 마지막에 kwanwoo25 에서 o가 덜 왔음 
+```
+
+string 에서 a\~z까지의 영문자가 연속으로 3-5개 발견된 문자열 추출
+
+```{r}
+str_extract_all(string, "[a-z]{3,5}") # 최소3개 에서 최대 5개로 옴 
+```
+
+```{r}
+#영문자만 추출하기 
+
+aaa <- str_extract_all(string, "[a-z]{3,}") # 3글자 이상 전부 추출
+aaa
+aaa[1]
+class(aaa) # 허걱! list 네요
+
+bbb<-unlist(aaa) # list를 제거 
+bbb
+
+
+
+str_extract_all(string, "[a-z]{3,}") # 3글자 이상 전부 추출
+
+bbb
+
+bbb[1]
+```
+
+숫자만 추출하기
+
+```{r}
+string
+ccc<- str_extract_all(string,"[0-9]{1,}")
+ccc
+ccc2 <-unlist(ccc)
+ccc2
+```
+
+한글만 추출하기
+
+```{r}
+string2 <- "ㅁ아ㅓㄹ;ㅇㄴ러나가나달아리앟호식 명철 윤현 영혁 "
+ddd<- str_extract_all(string2,"[가-횧]{1,}")
+ddd
+eee <- ddd<- str_extract_all(string,"[あ-ホ]{1,}")
+eee
+```
+
+영문자를 제외한 문자 출력하기
+
+```{r}
+string
+str_extract_all(string, "[^a-z]{1,}")
+```
+
+문자열 길이 구하기
+
+```{r}
+str_length(string)
+
+test321 <-str_extract_all(string, "[^a-z]{1,}")
+test321 <- unlist(test321)
+test321
+str_length(test321) # Warning: argument is not an atomic vector; coercing[1] 38
+```
+
+문자열 위치 구하기
+
+```{r}
+string
+str_locate(string,'호식') 
+# 호식 앞글자까지 글을 따고 싶을때 호식 위치 구하고, 그 전으로 찾으면 댐
+
+```
+
+```{r}
+str_sub(string,1,42) # 이렇게 쓰지 말구
+str_sub(string,1,str_locate(string,"호식")[1]) # 호 가 나옴 
+str_sub(string,1,str_locate(string,"호식")[1]-1) # -1 을 해서 호 가 빠짐
+
+
+```
+
+대문자 소문자 변경하기
+
+```{r}
+str_to_upper(string) #대문자로 변경하기
+str_to_lower(string) #소문자로 변경하기
+```
+
+문자열 교체하기
+
+```{r}
+string
+string <- str_replace(string,"hongkildong105","홍길동,")
+string <- str_replace(string, "yoube1002","유비45,")
+string <- str_replace(string, "kwanwoo25","관우25,")
+string <- str_replace(string,"ひらがな","ひらがな23、,")
+string <- str_replace(string,"2005","20")
+string
+```
+
+```{r}
+unlist(str_split(string, ",")) # 위에서 , 로 기준점을 만들고 , 로 자른뒤 list니까 unlist처리
+```
+
+천단위 숫자가 들어간 문자열을 숫자로 변경하기
+
+```{r}
+price <- "123,456,789"
+price1 <-str_extract_all(price,"[0-9]{1,}")
+
+#price1 <- unlist(str_split(price,","))
+price1
+price2 <- paste(price1[1],price1[2],price1[3],sep = "") # = 01011112222
+class(price2)
+str(price2)
+price2 <- as.numeric(price2)
+str(price2)
+
+### 강사님 답안지 
+as.numeric(str_replace_all(price,",",""))
+as.numeric(str_remove_all(price,","))
+```
+
+NA를 변경하기
+
+```{r}
+temp <- c(1,2,NA,4);temp
+sum(is.na(temp)) # = NA 1개 있는지 확인
+str_replace_na(temp, median(temp, na.rm =T)) ## 중앙값으로 대체 , 평균은 계산값이라 의미없다
+
+```
+
+\
