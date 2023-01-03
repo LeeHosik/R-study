@@ -1,0 +1,208 @@
+```{r}
+GAM <- read.csv('./Modi5Dementia.csv')[,-1]
+PlusGAM <- read.csv('./Data/PlushAddAllData.csv')[,-1]
+```
+
+```{r}
+library(caret)
+library(randomForest)
+library(dplyr)
+library(stringr)
+library(party)
+# 인공신경망
+library(nnet)
+# SVM
+library(e1071)
+```
+
+======================================================
+
+### 사용할 컬럼 Age, Gender, MMSE, CDR, EDUC 제외하고 없애기
+
+```{r}
+
+GAM <- GAM[,c(1,2,4,5,6)]
+GAM
+
+PlusGAM <- PlusGAM[,-c(3)]
+PlusGAM
+```
+
+CDR factor로 바꾸기
+
+```{r}
+GAM$CDR <- as.factor(GAM$CDR)
+PlusGAM$CDR <- as.factor(PlusGAM$CDR)
+```
+
+```{r}
+str(GAM)
+```
+
+```{r}
+str(PlusGAM)
+```
+
+### CDR 별로 나누기
+
+```{r}
+CDR1 <- subset(GAM, CDR == '1')
+nrow(CDR1) # = 38
+CDR5 <- subset(GAM, CDR == '0.5')
+nrow(CDR5) # = 110
+CDR0 <- subset(GAM, CDR == '0')
+nrow(CDR0) # = 205
+
+```
+
+```{r}
+subset(PlusGAM, CDR == 1)
+PlusCDR1 <- subset(PlusGAM, CDR == 1)
+nrow(subset(PlusGAM, CDR == 1)) # = 26
+
+subset(PlusGAM, CDR == 0)
+PlusCDR0 <- subset(PlusGAM, CDR == 0)
+nrow(subset(PlusGAM, CDR == 0)) # = 97
+
+subset(PlusGAM, CDR == 0.5)
+PlusCDR5 <- subset(PlusGAM, CDR == 0.5)
+nrow(subset(PlusGAM, CDR == 0.5)) # = 57
+```
+
+================
+
+### ADD DATA
+
+```{r}
+str(CDR1)
+```
+
+```{r}
+str(PlushCDR1)
+```
+
+```{r}
+FinalCDR1 <- rbind(CDR1,PlusCDR1)
+FinalCDR0 <- rbind(CDR0,PlusCDR0)
+FinalCDR5 <- rbind(CDR5,PlusCDR5)
+
+
+nrow(FinalCDR1) # = 64
+nrow(FinalCDR0) # = 302
+nrow(FinalCDR5) # = 168
+
+168+302+64
+#finalCDR1 
+```
+
+```{r}
+str(FinalCDR0)
+```
+
+=================
+
+### sample Data
+
+```{r}
+sample <- sample(1:64,64)
+
+test.CDR1 <- FinalCDR1[sample,]
+test.CDR5 <- FinalCDR5[sample,]
+test.CDR0 <- FinalCDR0[sample,]
+
+#data.CDR1 <- FinalCDR1[-sample,]  # 38 다 사용해서 CDR1은 그대로 사용 // 추가되서 살림  
+#nrow(data.CDR1)
+data.CDR5 <- FinalCDR5[-sample,] 
+#nrow(data.CDR5)
+data.CDR0 <- FinalCDR0[-sample,] 
+#nrow(data.CDR0)
+#data.CDR5
+
+
+testCDR <- rbind(test.CDR1,test.CDR0,test.CDR5)
+#dataCDR <- rbind(data.CDR1,data.CDR5,data.CDR0)  # 38 다 사용해서 CDR1은 그대로 사용 
+          # 추가되서 살림 
+dataCDR <- rbind(test.CDR1,data.CDR5,data.CDR0)
+#dataCDR
+nrow(dataCDR) #
+nrow(testCDR) #
+
+# rbind 한거 순서 한번 섞기
+sample <- sample(1:192,192)
+testCDR <- testCDR[sample,]
+
+
+sample <- sample(1:405,405)
+dataCDR <- dataCDR[sample,]
+
+```
+
+=================================================================
+
+### AI
+
+# 인공신경망
+
+```{r}
+x <- subset(testCDR , select = -CDR)
+y <- testCDR$CDR
+```
+
+```{r}
+model.nnet <- nnet(CDR ~ ., data = dataCDR, size = 3)
+pred <- predict(model.nnet, x, type = "class")
+pred
+```
+
+```{r}
+pred == y
+mean(pred == y)*100
+table(pred,y)
+```
+
+# RandomForest
+
+```{r}
+x <- subset(testCDR, select = -CDR)
+y <- testCDR$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ ., data = dataCDR, ntree = 100) 
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+mean(pred == y)
+table(pred,y)
+```
+
+# SVM
+
+```{r}
+x <- subset(testCDR, select = -CDR)
+y <- testCDR$CDR
+model <- svm(CDR ~., data = dataCDR)
+```
+
+```{r}
+pred <- predict(model,x)
+mean(pred == y)
+table(pred,y)
+```
+
+# 의사결정나무
+
+```{r}
+x <- subset(testCDR, select = -CDR)
+y <- testCDR$CDR
+#학습시키기
+dementia_tree <- ctree(CDR ~ ., data = dataCDR)
+pred <- predict(dementia_tree, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```

@@ -7,7 +7,7 @@ library(caret)
 library(e1071)
 ```
 
-## 인공신경망 
+## 인공신경망
 
 ```{r}
 nnetFun <- function(n){

@@ -1,0 +1,302 @@
+### 중앙치매센터_치매현황엑셀 을 csv로 변환해서 불러오기
+
+```{r}
+basicdementia <- read.csv("../Data/rproject/123.csv")
+
+# basicdementia 이름으로 저장 
+```
+
+사용할 라이브러리
+
+```{r}
+library(stringr)
+# arrange
+library(dplyr)
+```
+
+```{r}
+head(basicdementia)
+
+```
+
+```{r}
+tail(basicdementia)
+```
+
+```{r}
+str(basicdementia)
+```
+
+?? X..1\~ logi NA는 뭐고?
+
+```{r}
+summary(basicdementia)
+```
+
+### 기본 정제
+
+불필요한 칼럼 제거, x.1\~9 삭제 , 지역은 나중에 사용할지 모르겠는데 일단은 가능성 먼저 찾아보는거니까 지우고
+
+성별, 나이, 노인인구수, 치매 환자수 / 경도인지장애 환자수 만으로 사용
+
+```{r}
+# Dementia 이름에서 정제작업 시작 
+Dementia<-basicdementia
+```
+
+```{r}
+# 불필요한 컬럼 제거
+Dementia[,-(c(2:3,8,10:20))]
+Dementia <- Dementia[,-(c(2:3,8,10:20))]
+head(Dementia)
+```
+
+```{r}
+nrow(Dementia)
+```
+
+### Null check
+
+```{r}
+sum(is.na(Dementia))
+```
+
+### , 없애고 chr -\> int로 바꾸기
+
+```{r}
+Dementia$노인인구수
+
+
+for(i in 1:nrow(Dementia)){
+  Dementia[i,4:6] <- str_remove_all(Dementia[i,4:6],',')
+ 
+}
+
+
+Dementia$노인인구수 <- as.numeric(Dementia$노인인구수)
+Dementia$치매.환자수 <- as.numeric(Dementia$치매.환자수)
+Dementia$경도인지장애.환자수 <- as.numeric(Dementia$경도인지장애.환자수)
+
+
+head(Dementia)
+
+```
+
+```{r}
+str(Dementia)
+```
+
+### 성별과 연령별 타입 바꾸기
+
+```{r}
+Dementia$성별 <- as.factor(Dementia$성별)
+Dementia$연령별 <- as.factor(Dementia$연령별)
+str(Dementia)
+```
+
+```{r}
+summary(Dementia)
+```
+
+![](images/Screenshot%202022-12-30%20at%202.34.45%20AM.png)
+
+### 결측치? 확인
+
+??? 노인 인구수 0? 환자수, 0? 먼가가 있나?
+
+```{r}
+boxplot(Dementia$노인인구수)
+```
+
+```{r}
+sum(Dementia$노인인구수== 0) # = 24
+sum(Dementia$치매.환자수== 0) # = 29
+sum(Dementia$경도인지장애.환자수== 0) # = 24
+
+```
+
+노인 인구수 max가 150만, min0, mean 2.3만 으로 0값이 24개가 되서 눈으로 좀 봐야될거 같은데 ...
+
+```{r}
+max(Dementia$노인인구수)
+sum(Dementia$노인인구수<10) # = 24 ??? 노인 인구수가 10명도 안되는 ...? 
+sum(Dementia$노인인구수<100) # = 35
+sum(Dementia$노인인구수<1000) # = 3328
+min(Dementia$노인인구수)
+```
+
+```{r}
+subset(basicdementia, 노인인구수 == "0")
+```
+
+청원군 인구관련이 0 이네? 왜지 ?
+
+청주시 \<- c(청주시,청원군) 이 되버림
+
+출처: <https://imnews.imbc.com/replay/2014/nw1200/article/3487750_30291.html>
+
+청원군 데이터는 삭제해도 됨
+
+```{r}
+nrow(subset(Dementia, 노인인구수 == "0")) # = 24
+```
+
+### 청원군 데이터 삭제
+
+```{r}
+
+Dementia[c(5257:5267,8593:8604),]
+nrow(Dementia[c(5257:5267,8593:8604),]) # 23 ?
+nrow(Dementia[c(5257:5268,8593:8604),]) # 24!
+
+Dementia<-Dementia[-c(5257:5268,8593:8604),]
+```
+
+청원군 0인 데이터는 24개라 치고, 치매화자수가 29에서 24를 빼면 5개가 어디에 또 있네?
+
+```{r}
+subset(basicdementia[,1:10], 치매.환자수 == "0" & 행정구역.기초.별 != "청원군")
+```
+
+![](images/Screenshot%202022-12-30%20at%201.36.07%20PM.png)
+
+오.... 울릉군 ..... 울릉군에는 ... 치매가 없...으신가 ?
+
+```{r}
+subset(basicdementia[,1:10], 행정구역.기초.별=='울릉군' )
+
+```
+
+여기와서 깨닳았는데 인구수에 소수점이 있다는거에서 데이터 신뢰도가 떨어져서 원처 찾아보러 가봄
+
+![](images/Screenshot%202022-12-30%20at%201.43.46%20PM.png)
+
+![](images/Screenshot%202022-12-30%20at%201.44.08%20PM.png)
+
+```{=html}
+출처 : https://www.nid.or.kr/info/today_list.aspx#a
+```
+후.. 소수점을 없애고 그냥 처리할까 ....
+
+일단 구해진 Dementia로 상관계수 대충 해보자
+
+## 상관계수
+
+```{r}
+cor(Dementia, mothod="pearson")
+cor(Dementia$노인인구수, Dementia$치매.환자수) # = 0.5591351
+cor(Dementia$노인인구수, Dementia$경도인지장애.환자수) # = 0.7671232
+
+cor(Dementia$치매.환자수, Dementia$노인인구수)
+
+```
+
+### 지역분석은 나중으로 미루고 일단 년도별 연령대별로 합치자
+
+```{r}
+Dementia[1:40,]
+```
+
+```{r}
+unique(Dementia$연령별)
+```
+
+![](images/Screenshot%202022-12-30%20at%203.09.12%20PM.png)
+
+그래프가 좀 이상한거 같더라니 ... 일단 데이터를 60세 이상, 65세 이상 2가지로만 모아보자
+
+```{r}
+subset(basicdementia[,1:10], 치매.환자수 == "0" & 행정구역.기초.별 != "청원군")
+subset(Dementia, 연령별 == "60세이상" & 연령별 == "65세이상")
+subset(Dementia, 연령별 == "60세이상")
+subset(Dementia, 연령별 == "65세이상")
+
+```
+
+![](images/Screenshot%202022-12-30%20at%203.13.35%20PM.png)
+
+인구수가 너무 따로 많이 있는데... 전국이 있었나?
+
+```{r}
+basicdementia$행정구역.시도.별
+unique(basicdementia$행정구역.시도.별)
+
+# = "서울특별시"     "부산광역시"     "대구광역시"     "인천광역시"     "광주광역시"     "대전광역시"     "울산광역시"     "세종특별자치시" "경기도"         "강원도"         "충청북도"      "충청남도"       "전라북도"       "전라남도"       "경상북도"       "경상남도"       "제주특별자치도"
+```
+
+전국은 없고
+
+```{r}
+
+subset(Dementia, 노인인구수 >= 50000)
+arrange(subset(Dementia, 노인인구수 > 1000000), 노인인구수)
+
+```
+
+확인결과 60세 이상 으로 100만 이상 나옴 .\
+
+데이터프레임으로 60세 이상, 65세 이상 2개로 일만 만들어봄
+
+```{r}
+Deme60 <-subset(Dementia, 연령별 == "60세이상")
+Deme65 <-subset(Dementia, 연령별 == "65세이상")  
+```
+
+```{r}
+head(Deme60)
+```
+
+```{r}
+head(Deme65)
+```
+
+### Aggregate
+
+```{r}
+
+aggregate(cbind(시점, 연령별, 노인인구수, 치매.환자수, 경도인지장애.환자수) ~ 성별, Deme60, sum)
+```
+
+![](images/Screenshot%202022-12-30%20at%203.36.40%20PM.png)
+
+```{r}
+
+aggregate(cbind(성별, 연령별, 노인인구수, 치매.환자수, 경도인지장애.환자수) ~ 시점, Deme60, sum)
+
+```
+
+![](images/Screenshot%202022-12-30%20at%203.36.31%20PM.png)
+
+뭐가 잘못된거 같은데 ..?
+
+```{r}
+unique(Deme60$시점)
+ # = 2020 , 2021 
+
+```
+
+\~이상 붙은건 2020, 2021 2년 치만 있는거 같음
+
+```{r}
+unique(basicdementia$시점)
+```
+
+![](images/Screenshot%202022-12-30%20at%203.39.52%20PM.png)
+
+...??? 뭐지 ..? 맨 처음꺼 년도 날짜가 왜이래 ??
+
+```{r}
+subset(basicdementia, 시점=="2037")
+```
+
+![](images/Screenshot%202022-12-30%20at%203.41.31%20PM.png)
+
+장난치나 이게 뭐야 ?
+
+# 결론
+
+홈페이지 가서 다시 확인해보니 병신같은 데이터가 낑겨있었음...
+
+다운받을때 설마 년도를 선택할때 모두 선택누르면 과거만 가져올줄 알았지 미래꺼까지 가져올줄 알았나 ..
+
+![](images/Screenshot%202022-12-30%20at%203.44.38%20PM.png)

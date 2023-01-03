@@ -1,0 +1,12 @@
+```{r}
+read.csv('./dementia3.csv')
+```
+
+```{r}
+install.packages("httr") 
+```
+
+```{r}
+library(httr)
+GET('http://apis.data.go.kr/1352000/ODMS_STAT_25/callStat25Api?serviceKey=서비스키&pageNo=1&numOfRows=10&apiType=XML&year=2019&dvsd=서울')
+```

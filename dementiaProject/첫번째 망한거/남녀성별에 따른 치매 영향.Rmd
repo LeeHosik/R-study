@@ -1,0 +1,243 @@
+# 남녀 성별에 따른 치매에 예측
+
+```{r}
+data1 <- read.csv('./Data/치매1차가공데이터.csv')
+data1
+```
+
+```{r}
+#str
+library(stringr)
+# arrange
+library(dplyr)
+
+library(nnet)
+```
+
+```{r}
+data1 <- data1[,-1]
+```
+
+```{r}
+nrow(subset(data1, SexCode == 1 & CDR != 0)) # = 86 male
+nrow(subset(data1, SexCode == 0 & CDR != 0)) # = 62 female
+```
+
+```{r}
+subset(data1, SexCode == 1 & CDR != 0)
+data1
+```
+
+### 상관계수 구하기
+
+```{r}
+cor(data1$SexCode ,data1$CDR != 0)
+```
+
+    0.2683998  <- 성별과 치매가 아닌 사람의 상관계수는 0.27?
+
+```{r}
+
+cor(data1$SexCode == 1 ,data1$CDR != 0) # =  0.2683998
+cor(data1$SexCode == 0 ,data1$CDR != 0) # = -0.2683998 ??
+```
+
+make sample data
+
+sexcode 0 = F, 1 = M
+
+샘플 데
+
+```{r}
+# nrow(subset(data1,SexCode == 1)) # = 150 male
+# nrow(subset(data1,SexCode == 0)) # = 203 female
+# 
+# sample(1:75,50)
+# sample(76:150,50)
+# 
+# subset(data1, SexCode == 1)[1:10,]
+# 
+# sampleDataM <- dataM[sample(1:90,70),]
+# testDataM <- dataM[-sample(1:90,70),]
+# sampleDataF <- dataF[sample(1:90,70),]
+# testDataF <- dataF[-sample(1:90,70),]
+# 
+# sampleData <- rbind(sampleDataF,sampleDataM)
+# nrow(testDataM)
+# nrow(sampleDataM)
+# nrow(testDataF)
+# nrow(sampleDataF)
+# nrow(rbind(testDataF, testDataM));
+# testData <- rbind(testDataF, testDataM)
+# 
+# summary(sampleData)
+```
+
+sample data를 만들려니까 죄다 int 값이라 원하는 결과가 안나오겠음. 설병과 CDR을 chr, factor로 바꿔야할듯
+
+```{r}
+
+data1$SexCode <- str_replace_all(data1$SexCode,'1','남자')
+data1$SexCode <- str_replace_all(data1$SexCode,'0','여자')
+data1$SexCode <- as.factor(data1$SexCode)
+
+str(data1)
+unique(data1$SexCode)
+```
+
+```{r}
+
+data1$CDR <- str_replace_all(data1$CDR,'0.5','very mild AD')
+data1$CDR <- str_replace_all(data1$CDR,'0','no dementia')
+
+data1$CDR <- str_replace_all(data1$CDR,'1','over AD')
+data1$CDR <- as.factor(data1$CDR)
+unique(data1$CDR)
+```
+
+```{r}
+str(data1)
+```
+
+```{r}
+summary(data1)
+```
+
+남녀별 DataFrame 별로 동일한 수의 학습 데이터 생성
+
+## Create Sample Data
+
+```{r}
+
+dataM <- subset(data1, SexCode=="남자")
+dataF <- subset(data1, SexCode=="여자")
+
+ sampleDataM <- dataM[sample(1:90,70),]
+ testDataM <- dataM[-sample(1:90,70),]
+ sampleDataF <- dataF[sample(1:90,70),]
+ testDataF <- dataF[-sample(1:90,70),]
+```
+
+```{r}
+sampleData <- rbind(sampleDataM, sampleDataF)
+str(sampleData)
+```
+
+```{r}
+testData <- rbind(testDataF, testDataM)
+str(testData)
+```
+
+# 인공신경망
+
+학습 시키기
+
+```{r}
+model.nnet <- nnet(CDR ~ ., data = sampleData, size = 3 )
+```
+
+\
+
+```{r}
+#문제
+x <- subset(sampleData , select = -CDR)
+head(x)
+```
+
+```{r}
+#정답
+y <- sampleData$CDR
+head(y)
+```
+
+```{r}
+#검증
+pred <- predict(model.nnet, x, type = "class") # class : 객관식 / raw : 주관식 
+head(pred)
+```
+
+```{r}
+#예측력 확인
+pred == y
+mean(pred == y)*100
+```
+
+## 인공신경망 예측율 = 약 60% ?
+
+```{r}
+#정오표 확인
+table(pred,y)
+```
+
+# 의사결정나무
+
+```{r}
+library(party)
+library(caret)
+```
+
+```{r}
+dementia_tree <- ctree(CDR ~ ., data=sampleData)
+```
+
+```{r}
+pred <- predict(dementia_tree, x)
+head(pred)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+## 의사결정나무 예측율 = 약 80%?
+
+```{r}
+subset(data1, CDR == "no dementia")
+data1
+```
+
+# Random Forest
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+rf <- randomForest(CDR ~ ., data = sampleData, ntree = 100) # ntree : ctree가 100번 돌아감 
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+```
+
+## RF = 100 %?
+
+```{r}
+table(pred,y)
+```
+
+# SVM
+
+```{r}
+library(e1071)
+```
+
+```{r}
+model <- svm(CDR ~., data = sampleData)
+```
+
+```{r}
+pred <- predict(model,x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+## SVM = 약 83%

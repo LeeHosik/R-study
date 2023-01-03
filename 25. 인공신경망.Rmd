@@ -164,3 +164,11 @@ predict(model.nnet, xy, type = "class")
 ```{r}
 summary(iris)
 ```
+
+```{r}
+str(iris)
+```
+
+```{r}
+str(sampleData)
+```

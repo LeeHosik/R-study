@@ -1,0 +1,47 @@
+```{r}
+GAM <- read.csv('./Modi5Dementia.csv')[,-1]
+```
+
+```{r}
+library(stringr)
+```
+
+```{r}
+str(GAM$EDUC)
+```
+
+```{r}
+unique(GAM$EDUC)
+```
+
+```{r}
+
+
+EDUC11 <- subset(GAM,EDUC < 12) 
+EDUC12 <- subset(GAM,EDUC == 12) 
+EDUC15 <- subset(GAM,EDUC <16 & EDUC > 12) 
+EDUC16 <- subset(GAM,EDUC == 16) 
+EDUC17 <- subset(GAM,EDUC > 16) 
+
+nrow(EDUC11) # = 23
+EDUC11$EDUC = 1
+EDUC11
+nrow(EDUC12) # = 87
+EDUC12$EDUC = 2
+nrow(EDUC15) # = 77
+EDUC15$EDUC = 3
+nrow(EDUC16) # = 78
+EDUC16$EDUC = 4
+nrow(EDUC17) # = 88
+EDUC17$EDUC = 5
+
+NewGam <- rbind(EDUC11,EDUC12,EDUC15,EDUC16,EDUC17)
+
+
+23+87+77+78+88 # = 353
+nrow(GAM) # = 353
+```
+
+```{r}
+write.csv(NewGam, './Data/changeEducNewGAM.csv')
+```

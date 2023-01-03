@@ -15,4 +15,4 @@ predict(rf, list(Sepal.Length=5.4, Sepal.Width=3.9,
         )
 ```
 
-## 이 3개?2개? chunk가 R server에 들어가고 jsp가 R server에 물어봄 
+## 이 3개?2개? chunk가 R server에 들어가고 jsp가 R server에 물어봄

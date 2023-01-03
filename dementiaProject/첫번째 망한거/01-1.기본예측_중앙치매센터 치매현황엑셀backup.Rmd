@@ -1,0 +1,247 @@
+### 중앙치매센터_치매현황엑셀 을 csv로 변환해서 불러오기
+
+```{r}
+basicdementia <- read.csv("../Data/rproject/123.csv")
+
+# basicdementia 이름으로 저장 
+```
+
+사용할 라이브러리
+
+```{r}
+library(stringr)
+# arrange
+library(dplyr)
+```
+
+```{r}
+head(basicdementia)
+
+```
+
+```{r}
+tail(basicdementia)
+```
+
+```{r}
+str(basicdementia)
+```
+
+?? X..1\~ logi NA는 뭐고?
+
+```{r}
+summary(basicdementia)
+```
+
+### 기본 정제
+
+불필요한 칼럼 제거, x.1\~9 삭제 , 지역은 나중에 사용할지 모르겠는데 일단은 가능성 먼저 찾아보는거니까 지우고
+
+성별, 나이, 노인인구수, 치매 환자수 / 경도인지장애 환자수 만으로 사용
+
+```{r}
+# Dementia 이름에서 정제작업 시작 
+Dementia<-basicdementia
+```
+
+```{r}
+# 불필요한 컬럼 제거
+Dementia[,-(c(2:3,8,10:20))]
+Dementia <- Dementia[,-(c(2:3,8,10:20))]
+head(Dementia)
+```
+
+```{r}
+nrow(Dementia)
+```
+
+### Null check
+
+```{r}
+sum(is.na(Dementia))
+```
+
+### , 없애고 chr -\> int로 바꾸기
+
+```{r}
+Dementia$노인인구수
+
+
+for(i in 1:nrow(Dementia)){
+  Dementia[i,4:6] <- str_remove_all(Dementia[i,4:6],',')
+ 
+}
+
+
+Dementia$노인인구수 <- as.numeric(Dementia$노인인구수)
+Dementia$치매.환자수 <- as.numeric(Dementia$치매.환자수)
+Dementia$경도인지장애.환자수 <- as.numeric(Dementia$경도인지장애.환자수)
+
+
+head(Dementia)
+
+```
+
+```{r}
+str(Dementia)
+```
+
+```{r}
+summary(Dementia)
+```
+
+![](images/Screenshot%202022-12-30%20at%202.34.45%20AM.png)
+
+### 결측치? 확인
+
+??? 노인 인구수 0? 환자수, 0? 먼가가 있나?
+
+```{r}
+boxplot(Dementia$노인인구수)
+```
+
+```{r}
+sum(Dementia$노인인구수== 0) # = 24
+sum(Dementia$치매.환자수== 0) # = 29
+sum(Dementia$경도인지장애.환자수== 0) # = 24
+
+```
+
+노인 인구수 max가 150만, min0, mean 2.3만 으로 0값이 24개가 되서 눈으로 좀 봐야될거 같은데 ...
+
+```{r}
+max(Dementia$노인인구수)
+sum(Dementia$노인인구수<10) # = 24 ??? 노인 인구수가 10명도 안되는 ...? 
+sum(Dementia$노인인구수<100) # = 35
+sum(Dementia$노인인구수<1000) # = 3328
+min(Dementia$노인인구수)
+```
+
+```{r}
+subset(basicdementia, 노인인구수 == "0")
+```
+
+청원군 인구관련이 0 이네? 왜지 ?
+
+청주시 \<- c(청주시,청원군) 이 되버림
+
+출처: <https://imnews.imbc.com/replay/2014/nw1200/article/3487750_30291.html>
+
+청원군 데이터는 삭제해도 됨
+
+```{r}
+nrow(subset(Dementia, 노인인구수 == "0")) # = 24
+```
+
+### 청원군 데이터 삭제
+
+```{r}
+
+Dementia[c(5257:5267,8593:8604),]
+nrow(Dementia[c(5257:5267,8593:8604),]) # 23 ?
+nrow(Dementia[c(5257:5268,8593:8604),]) # 24!
+
+Dementia<-Dementia[-c(5257:5268,8593:8604),]
+```
+
+청원군 0인 데이터는 24개라 치고, 치매화자수가 29에서 24를 빼면 5개가 어디에 또 있네?
+
+```{r}
+subset(basicdementia[,1:10], 치매.환자수 == "0" & 행정구역.기초.별 != "청원군")
+```
+
+![](images/Screenshot%202022-12-30%20at%201.36.07%20PM.png)
+
+오.... 울릉군 ..... 울릉군에는 ... 치매가 없...으신가 ?
+
+```{r}
+subset(basicdementia[,1:10], 행정구역.기초.별=='울릉군' )
+
+```
+
+여기와서 깨닳았는데 인구수에 소수점이 있다는거에서 데이터 신뢰도가 떨어져서 원처 찾아보러 가봄
+
+![](images/Screenshot%202022-12-30%20at%201.43.46%20PM.png)
+
+![](images/Screenshot%202022-12-30%20at%201.44.08%20PM.png)
+
+```{=html}
+출처 : https://www.nid.or.kr/info/today_list.aspx#a
+```
+후.. 소수점을 없애고 그냥 처리할까 ....
+
+일단 구해진 Dementia로 상관계수 대충 해보자
+
+## 상관계수
+
+```{r}
+cor(Dementia, mothod="pearson")
+cor(Dementia$노인인구수, Dementia$치매.환자수) # = 0.5591351
+cor(Dementia$노인인구수, Dementia$경도인지장애.환자수) # = 0.7671232
+
+cor(Dementia$치매.환자수, Dementia$노인인구수)
+
+```
+
+```{r}
+str(basicdementia)[,-(11:20)]
+basicdementia[,-(c(2:3,8,10:20))]
+str_locate(basicdementia[,-(c(2:3,8,10:20))],'0')
+
+
+basicdementia[1,1:10]
+
+sum(basicdementia$성별==0)
+sum(basicdementia[,4]==0)
+ncol(basicdementia[,9:10])
+#for (i in ncol(basicdementia[,1:10])){
+for (i in 1:10){
+  testinput <- sum(basicdementia[,i]==0)
+  cat(i,"번째 => ",testinput,"\n")
+  
+}
+
+```
+
+현재시간 am 3:27 ... 성별과 나이만으로 한번 구해보고 싶은데 ... 나이가 슈ㅣ벌 chr네 ..?
+
+내일 나가서 하자 ...
+
+### 노인 인구수에서 경도인지장애 환자수 비율, 치매 환자수 비율 구하기
+
+\-\-\-\-- 이거 나중에 머낙 이상해서 보니까 놓친거 있음
+
+```{r}
+# 치매
+nrow(data.frame(round((Dementia$치매.환자수/ Dementia$노인인구수)*100,2)))
+Dementia$치매비율 <- (round((Dementia$치매.환자수/ Dementia$노인인구수)*100,2))
+
+# 경도인지장애 환자
+nrow(data.frame(round((Dementia$경도인지장애.환자수/ Dementia$노인인구수)*100,2)))
+Dementia$경도인지장애환자비율 <- (round((Dementia$경도인지장애.환자수/ Dementia$노인인구수)*100,2))
+
+head(Dementia)
+```
+
+## \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\--
+
+자고 일어나니까 머리가 좀 돌아가네, 위에꺼는 지역별로 나뉘어져 있던걸 컬럼만 빼놨던 거라서 일부 지역끼리의 차이가 극명함, 그래서 같은 15년에 같은 연령별로 계쏙 나뉘어져 있으니 숫자들을 합치자
+
+```{r}
+Dementia[1:40,]
+
+
+  aggregate(c(Dementia$노인인구수, Dementia$치매.환자수, Dementia$경도인지장애.환자수) ~ Dementia$성별 , Dementia, sum)
+
+aggregate(치매.환자수 ~ 노인인구수, Dementia, sum)
+c(Dementia$노인인구수, Dementia$치매.환자수, Dementia$경도인지장애.환자수) ~ Dementia$성별
+```
+
+```{r}
+Fdata15o2050 <- 
+  aggregate(cbind(서울특별시,부산광역시,대구광역시,인천광역시,광주광역시,대전광역시,울산광역시,세종특별시,경기도,강원도,충청북도,충청남도,전라북도,전라남도,경상북도,경상남도,제주특별시) ~ 년도 , Fdata15o2050, sum)
+```
+
+```{r}
+subset(basicdementia, 노인인구수 == "0")
+```

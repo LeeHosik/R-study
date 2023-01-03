@@ -1,0 +1,146 @@
+# 전처리
+
+will use data
+
+중앙치매센터 에서 찾은 [치매현황](https://www.nid.or.kr/info/ub_2021.aspx?no=145429) 2015 \~ 2021
+
+will use library
+
+```{r}
+library(stringr)
+# arrange
+library(dplyr)
+```
+
+read
+
+```{r}
+basicdementia <- read.csv("../Data/rproject/reData1.csv")
+```
+
+```{r}
+head(basicdementia)
+```
+
+```{r}
+tail(basicdementia)
+```
+
+```{r}
+str(basicdementia)
+```
+
+쓸데없는 칼럼 있고, 숫자에 , 있고 chr 처리 필요, 유병률도 사용하지 않을꺼니 없앨예정
+
+### 1-1 null check
+
+```{r}
+sum(is.na(basicdementia))
+# before delete  X ~ X.9 and after check null 
+```
+
+```{r}
+ncol(basicdementia) # = 30
+Dementia <- basicdementia[,-c(21:30)]
+head(Dementia)
+```
+
+```{r}
+sum(is.na(Dementia)) # = 0
+```
+
+### 1-2 delete don't will use column
+
+```{r}
+ncol(Dementia)
+str(Dementia)
+```
+
+    치매유병률 8, 유별률14 , 유병률.1  16, 기타유발.유병률  18, 경도인지장애.유병률 20
+    don't use Dementia $ 최경도.환자 / 경도.환자/중등도/환자/중증/환자
+
+```{r}
+Dementia<-Dementia[,-c(8:12,14,16,18,20)]
+head(Dementia)
+```
+
+### change type and delete ,
+
+```{r}
+ncol(Dementia) # = 11
+
+for(i in 1:nrow(Dementia)){
+  Dementia[i,6:11] <- str_remove_all(Dementia[i,6:11],',')
+ 
+}
+str(Dementia)
+Dementia$노인인구수<- as.numeric(Dementia$노인인구수)
+Dementia$치매환자수 <- as.numeric(Dementia$치매환자수)
+Dementia$알츠하이머.치매환자수<- as.numeric(Dementia$알츠하이머.치매환자수)
+Dementia$혈관성.치매환자수<- as.numeric(Dementia$혈관성.치매환자수)
+Dementia$기타유발.환자수<- as.numeric(Dementia$기타유발.환자수)
+Dementia$경도인지장애.환자수 <- as.numeric(Dementia$경도인지장애.환자수)
+
+
+head(Dementia)
+
+```
+
+```{r}
+Dementia$성별 <- as.factor(Dementia$성별)
+Dementia$연령별 <- as.factor(Dementia$연령별)
+str(Dementia)
+```
+
+let try
+
+```{r}
+aggregate( cbind(노인인구수, 치매환자수) ~ 연령별, Dementia, sum)
+```
+
+what the 남계 여계?
+
+```{r}
+nrow(subset(Dementia, Dementia$연령별 == "남계")) # 남/여 계 = 1113
+
+Dementia <- subset(Dementia, 연령별 != "남계" & 연령별 != "여계")
+
+# and don't use 60세이상,65세이상,85세이상
+
+Dementia <-subset(Dementia, 연령별 != "60세이상" & 연령별 != "65세이상"& 연령별 != "85세이상")
+str(Dementia)
+```
+
+```{r}
+aggregate( cbind(노인인구수, 치매환자수, 경도인지장애.환자수) ~ 연령별, Dementia, sum)
+```
+
+```{r}
+cor(Dementia$노인인구수, Dementia$치매환자수)
+```
+
+## Correlation = 0.4705327
+
+음...? 좀 생각했던거 보다 적은데 ?
+
+```{r}
+par(family = "AppleGothic")
+plot(Dementia)
+```
+
+다 치우고 성별 / 노인인구수 / 치매한자수 / 경도인지장애환자수 만으로 다시 그려보자
+
+```{r}
+par(family = "AppleGothic")
+plot(Dementia[,c(4,6,7,11)])
+```
+
+![](images/Screenshot%202022-12-30%20at%205.22.46%20PM.png)
+
+```{r}
+cor(Dementia$성별, Dementia$치매환자수)
+
+Dementia$성별[is.na(Dementia$성별)] = "2"
+
+Dementia$성별
+```

@@ -1,0 +1,149 @@
+# Dementia 정제
+
+## 데이터 불러오기
+
+```{r}
+dementia <- read.csv('./Data/alzheimer.csv', header=T)
+dementia
+```
+
+### 데이터 전체 확인
+
+```{r}
+str(dementia)
+```
+
+> 결측치(na), 빈칸 , 데이터타입 확인
+
+### \<컬럼 이름 설명\>
+
+Group: Converted / Demented / Nondemented (경도 / 치매 / 치매 아님)
+
+M.F: 성별
+
+Age: 나이
+
+EDUC: 교육 수준
+
+SES: 경제 수준 1(high) \~ 5(low)
+
+MMSE: Mini-Mental State Examination Score (0= worst, to 30 = best)
+
+CDR: Clinical Dementia Rating (0 = no dementia, 0.5 = very mild AD, 1 = mild AD, 2 = moderate AD)
+
+eTIV(estimate Total Intracranial volume): 뇌크기
+
+nWBV(Normalized whole-brain volume): 대뇌 크기
+
+ASF: Atlas scaling factor
+
+### 결측치 확인
+
+```{r}
+library(stringr)
+```
+
+```{r}
+sum(is.na(dementia))
+```
+
+> 결측치 2개 찾음! 어떤 컬럼에 결측치가 있는지 알아야 됨
+
+```{r}
+colSums(is.na(dementia))
+```
+
+> MMSE 에 2개 있다.
+
+```{r}
+dementia1 <- subset(dementia, !is.na(dementia$MMSE))
+```
+
+```{r}
+str(dementia1)
+```
+
+> SES 에 "" 비어있는 데이터와 "QR" 데이터 삭제!
+
+```{r}
+table(dementia1$SES)
+```
+
+### SES 컬럼 정제
+
+```{r}
+subset(dementia1, dementia1$SES == '')
+subset(dementia1, dementia1$SES == 'Qh')
+```
+
+SES 에 비어있는 데이터와 Qh 데이터를 다른 숫자로 치환할 수 없으므로 삭제하기
+
+```{r}
+dementia1 <- subset(dementia1, !dementia1$SES == '')
+dementia1 <- subset(dementia1, !dementia1$SES == 'Qh')
+```
+
+```{r}
+str(dementia1)
+```
+
+### Group은 예측할 때 필요 없음(왜냐하면 CDR이미 치매 정도를 측정하고 있다.)
+
+```{r}
+dementia1 <- dementia1[,-1]
+```
+
+```{r}
+str(dementia1)
+```
+
+### M.F(성별) 0, 1로 바꾸기(새로운 칼럼 만들어서 사용)
+
+```{r}
+dementia1$SexCode[dementia1$M.F == 'F'] <- 0
+dementia1$SexCode[dementia1$M.F == 'M'] <- 1
+```
+
+### M.F 삭제
+
+```{r}
+dementia1 <- dementia1[,-1]
+```
+
+### SES 숫자로 바꾸기
+
+```{r}
+dementia1$SES <- as.numeric(dementia1$SES)
+```
+
+```{r}
+str(dementia1)
+```
+
+### CDR 1, 2 factor 합치기
+
+```{r}
+library(stringr)
+```
+
+```{r}
+dementia1$CDR <- str_replace(dementia1$CDR, '2', '1')
+```
+
+### CDR factor로 바꾸기
+
+```{r}
+as.factor(dementia1$CDR)
+```
+
+```{r}
+dementia1$CDR <- as.factor(dementia1$CDR)
+```
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+write.csv(dementia1,file="치매1차가공데이터.csv")
+```

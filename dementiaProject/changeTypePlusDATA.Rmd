@@ -1,0 +1,63 @@
+```{r}
+PlusData <- read.csv('./Data/addAllData.csv')[,-1]
+```
+
+```{r}
+library(stringr)
+```
+
+```{r}
+PlusData
+```
+
+```{r}
+PlusData$SexCode[PlusData$M.F == 'F'] <- 0
+PlusData$SexCode[PlusData$M.F == 'M'] <- 1
+PlusData<-PlusData[,-1]
+```
+
+```{PlusData}
+PlusGAM
+```
+
+```{r}
+str(PlusGAM)
+```
+
+```{r}
+PlusData$CDR <- str_replace(PlusData$CDR, '2', '1')
+PlusData$CDR <- as.factor(PlusData$CDR)
+```
+
+```{r}
+str(PlusData)
+
+```
+
+```{r}
+boxplot(PlusData$Age)
+```
+
+```{r}
+boxplot(PlusData$Educ)
+```
+
+```{r}
+boxplot(PlusData$SES)
+```
+
+```{r}
+plot(PlusData$CDR, PlusData$Age)
+```
+
+```{r}
+str(PlusData$CDR)
+```
+
+```{r}
+boxplot(PlusData$SexCode)
+```
+
+```{r}
+write.csv(PlusData,'./Data/PlushAddAllData.csv')
+```

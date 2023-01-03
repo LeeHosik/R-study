@@ -1,0 +1,77 @@
+# 치매 예측율
+
+```{r}
+시군구별_치매현황
+
+2022~2020년 치밖에 없음 
+
+```
+
+```{r}
+library(stringr)
+# arrange
+library(dplyr)
+```
+
+```{r}
+# basicdementia <- read.csv('../Data/rprject/보건복지부_시군구별치매현황_20220311.csv')
+```
+
+```{r}
+basicdementia <- read.csv('../Data/rproject/시군구별_치매현황.csv', header = T, fileEncoding = "euc-kr")
+```
+
+```{r}
+tail(basicdementia)
+```
+
+```{r}
+str(basicdementia)
+```
+
+```{r}
+unique(basicdementia$시점)
+```
+
+```{r}
+sum(is.na(basicdementia$노인인구수))
+sum(is.na(basicdementia$치매.환자수))
+```
+
+```{r}
+cor(basicdementia$노인인구수, basicdementia$치매.환자수)
+cor()
+```
+
+```{r}
+head(basicdementia)
+```
+
+```{r}
+basicdementia$노인인구수
+
+
+for(i in 1:nrow(basicdementia)){
+  basicdementia[i,6:7] <- str_remove_all(basicdementia[i,6:7],',')
+}
+ 
+
+
+basicdementia$노인인구수 <- as.numeric(basicdementia$노인인구수)
+basicdementia$치매.환자수 <- as.numeric(basicdementia$치매.환자수)
+
+```
+
+```{r}
+str(basicdementia)
+```
+
+# 치매환자수와 노인 인구수의 상관관계
+
+```{r}
+cor(basicdementia$노인인구수, basicdementia$치매.환자수)
+```
+
+## = 0.5591351
+
+좀만 더 붙이면 될거같으니 스타트

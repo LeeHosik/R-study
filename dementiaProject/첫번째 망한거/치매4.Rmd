@@ -1,0 +1,25 @@
+```{r}
+demen4 <- read.csv('./Data/dementia4.csv')
+demen4
+```
+
+```{r}
+str(demen4)
+```
+
+```{r}
+nrow(demen4)
+```
+
+```{r}
+nrow(subset(demen4 , CDR == 0.0)) # = 205
+nrow(subset(demen4 , CDR == '0.5')) # = 110
+nrow(subset(demen4 , CDR == 1.0)) # = 38
+```
+
+```{r}
+
+
+
+
+```

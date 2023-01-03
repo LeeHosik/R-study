@@ -1,0 +1,110 @@
+```{r}
+demenCircleGraph <- read.csv('./Data/치매1차가공데이터.csv')
+```
+
+```{r}
+#str
+library(stringr)
+# arrange
+library(dplyr)
+# 3D chart
+library(plotrix)
+```
+
+```{r}
+head(demenCircleGraph)
+```
+
+sexcode 0 = F, 1 = M
+
+```{r}
+tail(demenCircleGraph)
+```
+
+```{r}
+str(demenCircleGraph)
+```
+
+```{r}
+demenCircleGraph<-demenCircleGraph[,-1]
+```
+
+```{r}
+tail(demenCircleGraph)
+```
+
+```{r}
+head(demenCircleGraph)
+```
+
+```{r}
+nrow(demenCircleGraph) # = 353
+subset(demenCircleGraph, CDR != 0)
+
+# CDR 이 0 이 아닌 사람들만 카운트 = 치매판정 환자 수 
+nrow(subset(demenCircleGraph, CDR != 0)) # = 148
+
+```
+
+sexcode 0 = F, 1 = M
+
+```{r}
+# 치매판정 환자 수 중 남녀 비율 확인 
+nrow(subset(demenCircleGraph, CDR != 0 & SexCode == 1)) # = 86 male
+nrow(subset(demenCircleGraph, CDR != 0 & SexCode == 0)) # = 62 female
+# 86+62 = 148
+
+```
+
+```{r}
+makeCharM <- round(nrow(subset(demenCircleGraph, CDR != 0 & SexCode == 1))/nrow(subset(demenCircleGraph, CDR != 0)),2) # = 0.58
+makeCharF <- round(nrow(subset(demenCircleGraph, CDR != 0 & SexCode == 0))/nrow(subset(demenCircleGraph, CDR != 0)),2) # = 0.42
+```
+
+```{r}
+demenCircleGraph$SexCode
+```
+
+```{r}
+SexCode <- c("여자","남자")
+Count <- c(makeCharF,makeCharM)
+dfMC <- data.frame(SexCode,Count)
+
+dfMC
+```
+
+label
+
+```{r}
+ratio <- round((dfMC$Count / sum(dfMC$Count)*100) , 2)
+ratio
+```
+
+```{r}
+label <- paste(dfMC$SexCode,"\n",ratio,"%")
+label
+```
+
+```{r}
+par(family = "AppleGothic")
+
+pie3D(
+  dfMC$Count,
+  labels = label,
+  main ="치매환자 성별 비율 그래프",
+  radius = 0.8,
+  height = 0.09,
+  border = "black",
+  explode = 0.04,
+    
+)
+
+legend(
+  -0.96 , .9,
+  #"topleft",
+       legend=c("여자","남자"),
+       fill=c("red","blue"),
+       border="white",
+       box.lty=1,
+       cex=1.0)
+```

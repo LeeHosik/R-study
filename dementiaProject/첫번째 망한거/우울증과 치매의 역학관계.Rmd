@@ -1,0 +1,263 @@
+우울증과 치매는 관련이 있을까?
+
+```{r}
+# 사용할 라이브러리
+library(stringr)
+# arrange
+library(dplyr)
+
+```
+
+```{r}
+
+data <- read.csv('./Data/시군구별_치매현황.csv', header = T, fileEncoding = "euc-kr")
+# https://www.data.go.kr/data/15073342/fileData.do
+```
+
+```{r}
+head(data)
+nrow(data) # = 13740
+```
+
+```{r}
+str(data)
+```
+
+```{r}
+#결측치 확인 
+sum(is.na(data)) 
+```
+
+```{r}
+unique(data$행정구역.시도.별) # = 전국은 안쓸꺼니까 17개 
+```
+
+```{r}
+unique(data$성별)
+# 성별 전체 안쓸꺼니 지울꺼임 
+```
+
+```{r}
+unique(data$연령별)
+# 남계, 여계, 60세이상, 65세이상 안쓸 꺼임 
+```
+
+## 사용하지 않을 칼럼 제거
+
+```{r}
+data <- subset(data, 성별 != '전체')
+nrow(data) # 9148
+```
+
+```{r}
+subset(data, 연령별 == '60세이상' & 연령별 == '65세이상' )#& 연령별 == '남계' & 연령별 == '여계')
+```
+
+```{r}
+data$연령별
+data <- subset(data, 연령별 != '60세이상')
+data <- subset(data, 연령별 != '65세이상')
+data <- subset(data, 연령별 != '남계')
+data <- subset(data, 연령별 != '여계')
+data <- subset(data, 성별 != '전체')
+data <- subset(data, 행정구역.시도.별 != '전국')
+data
+
+```
+
+사용할 칼럼
+
+### 시점(년도), 지역, 성별, 연령별, 노인인구수 , 치매환자수
+
+```{r}
+data <- data[,1:7]
+
+str(data)
+```
+
+```{r}
+summary(data)
+```
+
+### 우선 년도별로 나눠보자
+
+```{r}
+data20 <- subset(data, 시점 == "2020")
+data21 <- subset(data, 시점 == "2021")
+data22 <- subset(data, 시점 == "2022")
+```
+
+```{r}
+nrow(data20) # = 3324
+nrow(data21) # = 3324
+nrow(data22) # = 221   < ??
+```
+
+```{r}
+
+str(data22)
+```
+
+```{r}
+unique(data22$행정구역.시도.별)
+unique(data22$행정구역.기초.별)
+sum(data22$노인인구수) # = 20289238   2천만
+sum(data21$노인인구수) # = 26996414
+sum(data20$노인인구수) # = 25613004
+```
+
+### ??? 22년 노인 인구수가 20년, 21년에서 약 700만이 줄었다고 ?22년도는 사용 X 
+
+```{r}
+str(data21)
+```
+
+```{r}
+data21$성별 <- as.factor(data21$성별)
+data21$연령별 <- as.factor(data21$연령별)
+aggregate(노인인구수 ~ 연령별, data21, sum)
+aggregate(치매환자수 ~ 연령별, data21, sum)
+```
+
+### 연령별대로 노인 인구수와 치매환자수로만 구성 
+
+```{r}
+
+data21OD <- cbind(aggregate(노인인구수 ~ 연령별, data21, sum),aggregate(치매환자수 ~ 연령별, data21, sum))[,-3]
+```
+
+치매환자수 소수점 버림
+
+```{r}
+data21OD$치매환자수 <- floor(data21OD$치매환자수)
+data21OD
+```
+
+## 연령대별 치매율 
+
+```{r}
+(data21OD$치매환자수 / data21OD$노인인구수) * 100
+```
+
+### 치매율 평균 
+
+```{r}
+mean((data21OD$치매환자수 / data21OD$노인인구수) * 100) # 12.9
+```
+
+연령대별 치매율 증가폭에 의미가 있는듯 하다
+
+```{r}
+as.numeric(as.matrix(data21OD$노인인구수))
+as.numeric(as.matrix(data21OD$치매환자수))
+
+imsi <- rbind(as.numeric(as.matrix(data21OD$노인인구수)),as.numeric(as.matrix(data21OD$치매환자수)))
+colnames(imsi) <- c("60~64세","65~69세","70~74세","75~79세","80~84세","85세이상")
+imsi
+```
+
+```{r}
+
+ratio <- (data21OD$치매환자수 / data21OD$노인인구수) * 100
+ratio
+
+```
+
+```{r}
+par(family="AppleGothic")
+bybp=  barplot(
+  imsi/1000,
+  beside = T,
+  main = "2020년도 연령대별 노인인구수와 치매환자 수",
+  ylab = "인구수 ( 단위 : 천명)",
+  xlab = "연령대",
+  ylim=c(0000,10000),
+  col=c("grey","red"),
+  width = c(rep(2:3,6))
+  
+  
+)
+  
+legend(
+  14,10000,
+  legend=c("고령자 인구","치매환자수"),
+  fill=c("grey","red"),
+  border="white",
+  box.lty=0,
+  cex=0.8,
+  )
+text(
+  x=bybp+0.45, 
+  y = c(0,400,0,500,0,900,0,1000,0,1100,0,1200),
+  labels=c("","0.61%","","1.38%","","3.86%","","11.80%","","20.92%","","38.84%"), 
+  
+  )
+
+```
+
+```{r}
+seq(1:7,1)
+rep(2:3,6)
+```
+
+나이별 상관계수 구해보기
+
+```{r}
+str(data21OD)
+cor(data21OD$노인인구수, data21OD$치매환자수)
+```
+
+는... 연령별이 구간이라 factor... 라서 인구수랑 환자수로 했떠니 역상관 - 90% ㅋㅋ
+
+```{r}
+str(data21)
+```
+
+```{r}
+nrow(subset(data21, 연령별 == "60~64세")) # = 554
+nrow(subset(data21, 연령별 == "65~69세")) # = 554
+nrow(subset(data21, 연령별 == "70~74세")) # = 554
+nrow(subset(data21, 연령별 == "75~79세")) # = 554
+nrow(subset(data21, 연령별 == "80~84세")) # = 554
+nrow(subset(data21, 연령별 == "85세이상")) # = 554
+
+```
+
+```{r}
+unique(data21OD)
+```
+
+# 지역별 치매인구수와 분포 확인 
+
+```{r}
+data$노인인구수 <- floor(data$노인인구수)
+data$치매환자수 <- floor(data$치매환자수)
+
+data$성별 <- as.factor(data$성별)
+data$연령별 <- as.factor(data$연령별)
+
+str(data)
+
+arrange(data,desc(치매율))
+
+
+aggregate(치매율 ~ 행정구역.시도.별, data, sum )
+
+# 치매율 다시 없애고 동읍면 없애고 시로 통합 
+
+
+```
+
+```{r}
+data <- data[,-c(3,8)]
+
+data[,-c(3,8)]
+
+# 85세 이상을 제외하고 나머지만 나이없애고 지역별로 합치고 85세는 따로 만들어보자
+
+data <- subset(data, 연령별 !="85세이상")
+```
+
+```{r}
+data
+```

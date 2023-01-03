@@ -1,0 +1,220 @@
+```{r}
+dementia <- read.csv('./basicDementia.csv')
+dementia<- dementia[,-1]
+original <- read.csv('./Data/alzheimer.csv')
+```
+
+```{r}
+library(caret)
+library(randomForest)
+library(dplyr)
+library(stringr)
+library(party)
+# 인공신경망
+library(nnet)
+# SVM
+library(e1071)
+```
+
+```{r}
+dementia
+```
+
+CDR \<- factor
+
+```{r}
+dementia$CDR<-as.factor(dementia$CDR)
+```
+
+eTIV, nWBV, ASF 제외
+
+```{r}
+dementia <- dementia[,-c(6:8)]
+```
+
+CDR별 sample data 만들기
+
+```{r}
+
+CDR1 <- subset(dementia, CDR == '1')
+nrow(CDR1) # = 38
+CDR5 <- subset(dementia, CDR == '0.5')
+nrow(CDR5) # = 110
+CDR0 <- subset(dementia, CDR == '0')
+nrow(CDR0) # = 205
+
+```
+
+```{r}
+sample <- sample(1:38,38)
+
+test.CDR1 <- CDR1[sample,]
+test.CDR5 <- CDR5[sample,]
+test.CDR0 <- CDR0[sample,]
+
+#data.CDR1 <- CDR1[-sample,] 
+nrow(data.CDR1)
+data.CDR5 <- CDR5[-sample,] 
+nrow(data.CDR5)
+data.CDR0 <- CDR0[-sample,] 
+nrow(data.CDR0)
+
+
+
+testCDR <- rbind(test.CDR1,test.CDR0,test.CDR5)
+#dataCDR <- rbind(data.CDR1,data.CDR5,data.CDR0)
+dataCDR <- rbind(test.CDR1,data.CDR5,data.CDR0)
+
+nrow(dataCDR)
+nrow(testCDR)
+38*3
+
+sample <- sample(1:114,114)
+testCDR <- testCDR[sample,]
+
+```
+
+```{r}
+testCDR
+```
+
+```{r}
+
+# 기본(성별, MMSE, Age)
+basicCDR <- testCDR[,c(5,1,6,4)]
+
+# 기본(성별, MMSE, Age) + SES
+basicCDR1 <- testCDR[,c(5,1,6,4,3)]
+
+# 기본(성별, MMSE, Age) + EDUC
+basicCDR2 <- testCDR[,c(5,1,6,4,2)]
+
+#기본(성별, MMSE, Age) + SES + EDUC 
+testCDR
+
+```
+
+```{r}
+write.csv(dementia, './Modi5Dementia.csv')
+```
+
+# 이 아래 불필요, 파일 새로 만듦
+
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\--
+
+# Random Forest
+
+```{r}
+# 기본(성별, MMSE, Age)
+x <- basicCDR
+y <- basicCDR$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ ., data = basicCDR, ntree = 100) # ntree : ctree가 100번 돌아감 
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+```
+
+```{r}
+table(pred,y)
+```
+
+# 의사결정 나무
+
+```{r}
+x <- subset(testCDR, select = -CDR)
+y <- testCDR$CDR
+```
+
+```{r}
+#의사결정나무
+test1_tree <- ctree(CDR ~ ., data = dataCDR)
+
+```
+
+## 채점하기
+
+```{r}
+pred <- predict(test1_tree, x)
+mean(pred == y)
+
+```
+
+```{r}
+table(pred, y)
+```
+
+# 인공신경망
+
+```{r}
+str(testCDR)
+```
+
+numeric으로 바꿔서 해보자
+
+```{r}
+testCDR$CDR <- as.numeric(testCDR$CDR)
+testCDR$CDR <- as.factor(testCDR$CDR)
+```
+
+```{r}
+x <- subset(testCDR , select = -CDR)
+y <- testCDR$CDR
+
+```
+
+```{r}
+model.nnet <- nnet(CDR ~ ., data = dataCDR, size = 3 ) # size : 은닉층 갯수 
+pred <- predict(model.nnet, x, type = "class") # class : 객관식 / raw : 주관식 
+pred
+```
+
+```{r}
+pred == y
+mean(pred == y)*100
+```
+
+\
+
+```{r}
+table(pred,y)
+```
+
+# ? 왜 pred 가 0 만 나옴 ..?
+
+# SVM
+
+```{r}
+str(y)
+str(pred)
+str(testCDR)
+```
+
+```{r}
+str(testCDR)
+```
+
+```{r}
+x <- subset(testCDR , select = -CDR)
+y <- testCDR$CDR
+```
+
+```{r}
+model <- svm(CDR ~., data = dataCDR)
+```
+
+```{r}
+pred <- predict(model,x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
