@@ -1,7 +1,0 @@
-```{r}
-read.csv('./Data/dementia_dataset.csv')
-```
-
-```{r}
-nrow(read.csv('./Data/dementia_dataset.csv'))
-```

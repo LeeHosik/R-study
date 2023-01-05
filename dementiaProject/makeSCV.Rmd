@@ -1,0 +1,13 @@
+```{r}
+GAM <- read.csv('./Data/changeEducNewGAM.csv')[,-1]
+PlusGAM <- read.csv('./Data/PlushAddAllData.csv')[,-1]
+```
+
+```{r}
+rbind(GAM,PlusGAM)
+```
+
+```{r}
+str(PlusGAM)
+  
+```

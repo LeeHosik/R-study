@@ -1,5 +1,5 @@
 ```{r}
-GAM <- read.csv('./Modi5Dementia.csv')[,-1]
+GAM <- read.csv('./Data/changeEducNewGAM.csv')[,-1]
 PlusGAM <- read.csv('./Data/PlushAddAllData.csv')[,-1]
 ```
 
@@ -20,12 +20,16 @@ library(e1071)
 ### 사용할 컬럼 Age, Gender, MMSE, CDR, EDUC 제외하고 없애기
 
 ```{r}
+GAM[,c(1,2,4,5,6)]
+PlusGAM[,c(1,2,4,5,6)]
+```
 
+```{r}
 GAM <- GAM[,c(1,2,4,5,6)]
 GAM
-
-PlusGAM <- PlusGAM[,-c(3)]
+PlusGAM <- PlusGAM[,c(1,2,4,5,6)]
 PlusGAM
+nrow(GAM)+nrow(PlusGAM) # = 533
 ```
 
 CDR factor로 바꾸기
@@ -52,7 +56,7 @@ CDR5 <- subset(GAM, CDR == '0.5')
 nrow(CDR5) # = 110
 CDR0 <- subset(GAM, CDR == '0')
 nrow(CDR0) # = 205
-
+nrow(CDR1)+nrow(CDR5)+nrow(CDR0) # = 353
 ```
 
 ```{r}
@@ -67,6 +71,12 @@ nrow(subset(PlusGAM, CDR == 0)) # = 97
 subset(PlusGAM, CDR == 0.5)
 PlusCDR5 <- subset(PlusGAM, CDR == 0.5)
 nrow(subset(PlusGAM, CDR == 0.5)) # = 57
+
+nrow(subset(PlusGAM, CDR == 0.5))+nrow(subset(PlusGAM, CDR == 0))+nrow(subset(PlusGAM, CDR == 1))
+```
+
+```{r}
+nrow(CDR1)+nrow(CDR5)+nrow(CDR0)+nrow(subset(PlusGAM, CDR == 0.5))+nrow(subset(PlusGAM, CDR == 0))+nrow(subset(PlusGAM, CDR == 1))
 ```
 
 ================
@@ -78,7 +88,7 @@ str(CDR1)
 ```
 
 ```{r}
-str(PlushCDR1)
+str(PlusCDR1)
 ```
 
 ```{r}
@@ -89,10 +99,10 @@ FinalCDR5 <- rbind(CDR5,PlusCDR5)
 
 nrow(FinalCDR1) # = 64
 nrow(FinalCDR0) # = 302
-nrow(FinalCDR5) # = 168
+nrow(FinalCDR5) # = 167
 
-168+302+64
-#finalCDR1 
+
+nrow(FinalCDR1)+nrow(FinalCDR0)+nrow(FinalCDR5)
 ```
 
 ```{r}

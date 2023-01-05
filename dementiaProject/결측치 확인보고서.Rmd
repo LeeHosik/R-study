@@ -1,0 +1,370 @@
+# 밑에껄로 다시 시작
+
+<https://www.kaggle.com/datasets/jboysen/mri-and-alzheimers?resource=download>
+
+```{r}
+alzheimer <- read.csv('./Data/original/alzheimer.csv')
+cross <- read.csv('./Data/original/oasis_cross-sectional.csv')
+
+```
+
+```{r}
+alzheimer
+```
+
+```{r}
+cross
+```
+
+## 결측치 확인
+
+```{r}
+sum(is.na(alzheimer)) #= 21
+sum(is.na(cross)) # = 823
+
+```
+
+```{r}
+sum(is.na(cross))
+```
+
+```{r}
+colSums(is.na(cross))
+```
+
+```{r}
+colSums(is.na(alzheimer))
+```
+
+NA가 alzheimer에는 MMSE에서 2개 확인, cross에서는 총 800개 이상 확인이 됨
+
+```{r}
+alzheimer[is.na(alzheimer$MMSE),]
+```
+
+```{r}
+library(dplyr)
+```
+
+MMSE와 Target Column 인 CDR의 상관계수를 구하고 싶으나 NA 때문에 구해지지 않음
+
+alzheimer 이상치 제거
+
+```{r}
+#
+nrow(alzheimer %>% filter(complete.cases(alzheimer))) # = 371
+nrow(alzheimer) # = 373
+
+test1 <- alzheimer %>% filter(complete.cases(alzheimer))
+```
+
+```{r}
+cor(test1$MMSE, test1$CDR)
+
+```
+
+### MMSE 와 CDR은 높은 역 상관계수를 가지고 있어 대체값으로 넣어서 살릴 수 있으면 살리고 싶으나 MMSE의 NA값을 대체할 수 없음.
+
+alzheimer 의 NA가 있는 2개 row 제거
+
+```{r}
+alzheimer <- test1
+```
+
+cross의 na 를 확인...
+
+```{r}
+cross[!is.na(cross$CDR),]
+```
+
+CDR은 Target Column 인데 Na 값이 있는건 사용이 불가 삭제처리
+
+```{r}
+cross <- cross[!is.na(cross$CDR),]
+```
+
+```{r}
+sum(is.na(cross$CDR))
+```
+
+CDR의 NA 갯수 0
+
+```{r}
+sum(is.na(cross))
+```
+
+cross NA 갯수 19개
+
+```{r}
+colSums(is.na(cross))
+```
+
+SES Column에 19개 확인
+
+```{r}
+cross[is.na(cross$SES),]
+```
+
+SES는 경제 수준 1(high) \~ 5(low) 을 나타내는 지표인데 임의값을 넣을 수 없음 ?????
+
+```{r}
+
+# SES 가 NA 값인 사람들의 CDR 분포
+table(cross[is.na(cross$SES),][,8])
+
+```
+
+```{r}
+# CDR 이 0인(치매X) 사람들의 SES 분포
+subset(cross, CDR == 0)[,6]
+length(subset(cross, CDR == 0)[,6]) # 135 length
+table(subset(cross, CDR == 0)[,6])
+```
+
+```{r}
+# CDR 이 0.5인(경증치매) 사람들의 SES 분포
+table(subset(cross, CDR == 0.5)[,6])
+```
+
+```{r}
+# CDR 이 0.5인(중증이상치매) 사람들의 SES 분포
+table(subset(cross, CDR == 1)[,6])
+```
+
+SES가 NA 값의 사람들중 68.42% 가 CDR 0.5에 분포되어 있으므로 CDR 0.5에 13명, 1에 4명, 0에 2명을 각 분포에 맞춰 추가
+
+하기 전에 다른 값들도 확인하고 넣자
+
+```{r}
+str(cross)
+```
+
+```{r}
+plot(
+  cross[,-c(1,3,8,9,10,11,12)]
+)
+```
+
+```{r}
+plot(
+  cross$SES,cross$Age,
+)
+sum(is.na(cross$SES))
+```
+
+경제 주순이 낮을 수록 연령대가 고르게 분포가 되어 있다
+
+```{r}
+boxplot(
+  cross$SES
+)
+```
+
+```{r}
+boxplot(
+  cross$Age
+)
+```
+
+SES가 NA인 사람들 중 60대 이하의 사람들이 얼마나 있는지 확인해보자
+
+```{r}
+subset(cross, is.na(SES) & Age < 60)
+```
+
+젋은 층일 수록 경제수준이 낮게 나오는 편이 있으므로 상기 값의 SES 는 1로 넣자
+
+# 일단 이거는 안씀
+
+cross 결측치 다 지우고 로우갯수 확인
+
+```{r}
+cross <- cross[complete.cases(cross),]
+```
+
+```{r}
+nrow(cross)
+```
+
+```{r}
+373+436 - 222
+2+220
+```
+
+========================================
+
+# 여기부터 다시
+
+==================================================================
+
+```{r}
+alzheimer <- read.csv('./Data/original/alzheimer.csv')
+cross <- read.csv('./Data/original/oasis_cross-sectional.csv')
+
+```
+
+```{r}
+str(alzheimer)
+```
+
+```{r}
+str(cross)
+```
+
+```{r}
+unique(cross$Hand)
+```
+
+사용하지 않을 칼럼 삭제
+
+```{r}
+cross <- cross[,c(2,4,5,6,7,8)]
+alzheimer <- alzheimer[,c(2,3,4,5,6,7)]
+```
+
+cross의 Educ 와 alzheimer 컬렴명 통일
+
+```{r}
+library(dplyr)
+cross <- rename(cross, EDUC=Educ)
+str(cross)
+```
+
+```{r}
+str(alzheimer)
+```
+
+사용하지 않을 칼럼 삭제
+
+성별은 0,1 로 새로운 컬럼 사용
+
+```{r}
+cross$gender[cross$M.F == 'F'] <- 0
+cross$gender[cross$M.F == 'M'] <- 1
+alzheimer$gender[alzheimer$M.F == 'F'] <- 0
+alzheimer$gender[alzheimer$M.F == 'M'] <- 1
+cross <- cross [,-1]
+alzheimer <- alzheimer[,-1]
+```
+
+```{r}
+str(cross)
+```
+
+```{r}
+str(alzheimer)
+```
+
+SES numeric으로 변경
+
+```{r}
+as.numeric(alzheimer$SES)
+as.factor(alzheimer$SES)
+```
+
+?????
+
+```{r}
+unique(alzheimer$SES)
+```
+
+SES 에 비어있는 데이터와 Qh 데이터를 다른 숫자로 치환할 수 없으므로 삭제하기
+
+```{r}
+alzheimer <- subset(alzheimer, !alzheimer$SES == '')
+alzheimer <- subset(alzheimer, !alzheimer$SES == 'Qh')
+
+```
+
+```{r}
+alzheimer$SES<- as.numeric(alzheimer$SES)
+cross$SES <- as.numeric(cross$SES)
+```
+
+```{r}
+str(cross)
+```
+
+데이터 합치기
+
+```{r}
+Data <- rbind(alzheimer, cross)
+Data
+```
+
+```{r}
+str(Data)
+nrow(Data)
+sum(is.na(Data))
+```
+
+## 결측치 확인
+
+```{r}
+sum(is.na(Data))
+colSums(is.na(Data))
+```
+
+```{r}
+nrow(Data %>% filter(complete.cases(Data))) # = 569
+nrow(Data) # = 789
+
+test1 <- Data %>% filter(complete.cases(Data))
+```
+
+### CDR은 target Column 이라 NA값은 사용할 여지가 없으므로 CDR NA인 row 삭제
+
+```{r}
+nrow(Data)
+Data1 <- Data[!is.na(Data$CDR),]
+nrow(Data1)
+
+789-588
+```
+
+```{r}
+colSums(is.na(Data1))
+```
+
+```{r}
+subset(Data1, is.na(Data1$SES))
+
+str(subset(Data1, is.na(Data1$SES)))
+```
+
+```{r}
+Data1 <- Data[!is.na(Data$SES),]
+nrow(Data1)
+```
+
+```{r}
+str(Data1)
+```
+
+```{r}
+plot(Data1)
+```
+
+```{r}
+cor(Data1)
+```
+
+```{r}
+subset(Data1, CDR == 2)
+```
+
+```{r}
+nrow(Data1)
+```
+
+```{r}
+library(stringr)
+Data1$CDR <- str_replace(Data1$CDR, '2', '1')
+unique(Data1$CDR)
+```
+
+### alzheimer 와 cross의 EDUC Column 통일
+
+```{r}
+
+```

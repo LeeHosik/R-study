@@ -4,9 +4,16 @@ PlusData <- read.csv('./Data/addAllData.csv')[,-1]
 
 ```{r}
 library(stringr)
+library(dplyr)
+
 ```
 
 ```{r}
+PlusData
+```
+
+```{r}
+PlusData<-rename(PlusData, EDUC=Educ)
 PlusData
 ```
 
@@ -16,7 +23,7 @@ PlusData$SexCode[PlusData$M.F == 'M'] <- 1
 PlusData<-PlusData[,-1]
 ```
 
-```{PlusData}
+```{r}
 PlusGAM
 ```
 

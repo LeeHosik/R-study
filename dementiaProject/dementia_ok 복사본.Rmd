@@ -104,7 +104,7 @@ dementia1$SexCode[dementia1$M.F == 'F'] <- 0
 dementia1$SexCode[dementia1$M.F == 'M'] <- 1
 ```
 
-### M.F 삭제 
+### M.F 삭제
 
 ```{r}
 dementia1 <- dementia1[,-1]
@@ -130,7 +130,7 @@ library(stringr)
 dementia1$CDR <- str_replace(dementia1$CDR, '2', '1')
 ```
 
-### CDR factor로 바꾸기 
+### CDR factor로 바꾸기
 
 ```{r}
 as.factor(dementia1$CDR)

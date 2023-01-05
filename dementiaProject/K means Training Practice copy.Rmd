@@ -1,0 +1,119 @@
+## 데이터 준비
+
+```{r}
+library(caret)
+library(randomForest)
+library(dplyr)
+library(stringr)
+library(party)
+# 인공신경망
+library(nnet)
+# SVM
+library(e1071)
+library(ggplot2)
+```
+
+```{r}
+
+
+
+test <-read.csv('./Data/FinalData.csv')
+
+
+inTrain <- createDataPartition(y = iris$Species, p = 0.7, list = F)
+training <- iris[inTrain,]
+testing <- iris[-inTrain,]
+nrow(testCDR)
+training
+test
+```
+
+## 표준화
+
+```{r}
+
+               training.data <- scale(training[-5])
+summary(training.data)
+
+training.data
+scale(test[-5])
+                cdr.testkmeans <-scale(test[-5])
+summary(cdr.testkmeans)
+cdr.testkmeans
+nrow(cdr.testkmeans)
+cdr.testkmeans
+```
+
+## 모델작성
+
+```{r}
+iris.kmeans <- kmeans(training.data[,-5], centers = 3, iter.max = 10000)
+iris.kmeans$centers
+
+cdr.testkmeans <-  kmeans(cdr.testkmeans[,-5], centers = 3, iter.max = 10000)
+cdr.testkmeans$centers
+
+
+```
+
+## 군집 확인
+
+```{r}
+
+          training$cluster <- as.factor(iris.kmeans$cluster)
+          testCDR$cluster <- as.factor(cdr.testkmeans$cluster)
+
+          
+          iris.kmeans$cluster
+cdr.testkmeans$cluster
+          
+
+
+```
+
+```{r}
+table(training$Species, training$cluster)
+```
+
+> [잠깐!] K-means 군집분석에서 군집 중심의 갯수를 결정하는 방법
+
+K-means 군집분석에서는 입력하는 변수와 함께 **중심의 갯수를 지정하는 것**이 중요한데요, 몇개의 군집 중심이 적당한지 결정하는 방법에는 여러가지가 있습니다. 그중 자주 사용하는 `NbClust 패키지`를 사용하는 방법과 군집 내 `sum of squares`를 사용하는 방법이 있습니다. 우선 NbClust 함수를 써보겠습니다.
+
+```{r}
+#install.packages("NbClust")
+library(NbClust)
+
+nc <- NbClust(training.data, min.nc = 2, max.nc = 15, method = "kmeans")
+```
+
+```{r}
+par(mfrow=c(1,1))
+barplot(table(nc$Best.n[1,]),
+        xlab="Numer of Clusters", ylab="Number of Criteria",
+        main="Number of Clusters Chosen")
+```
+
+```{r}
+wssplot <- function(data, nc = 15, seed = 1234) {
+  wss <- (nrow(data) - 1) * sum(apply(data, 2, var))
+  for (i in 2:nc) {
+    set.seed(seed)
+    wss[i] <- sum(kmeans(data, centers=i)$withinss)}
+  plot(1:nc, wss, type="b", xlab = "Number of Clusters",
+       ylab = "Within groups sum of squares")}
+
+wssplot(training.data)
+```
+
+## 새로운 데이터에 군집 할당
+
+```{r}
+training.data <- as.data.frame(training.data)
+modFit <- train(x = training.data[,-5], 
+                y = training$cluster,
+                method = "rpart")
+
+testing.data <- as.data.frame(scale(testing[-5]))
+testClusterPred <- predict(modFit, testing.data) 
+table(testClusterPred ,testing$Species)
+```
